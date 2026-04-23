@@ -1,4 +1,4 @@
-import { AuctionLot } from '../types';
+import { AuctionLot, EventMetadata } from '../types';
 
 export const getAuctions = (): AuctionLot[] => {
     const saved = localStorage.getItem('arcadia_auctions');
@@ -9,7 +9,7 @@ export const getAuctions = (): AuctionLot[] => {
         cipherTitle: "⍵⍨⍙⍫ ⍮⍝ ⍳⍧⎊ ⍝⍨⍱⍲⍳ ⍱⍙⍨⍭",
         cipherDescription: "⍯⍴⍱⍯⍮⍱⍳⎊⎉ ⍳⍮ ⍦⎊ ⍳⍧⎊ ⍝⍨⍱⍲⍳ ⍯⍱⎊⎈⍨⍯⍨⍳⍙⍳⍨⍮⍭ ⍳⍮ ⍝⍙⍫⍫ ⍮⍭ ⍳⍧⎊ ⍭⎊⍶⍫⍸ ⍝⍮⍱⍬⎊⎉ ⎊⍙⍱⍳⍧⎔ ⍦⍫⍮⍶⍲ ⍝⍙⍨⍭⍳⍫⍸ ⍴⍭⎉⎊⍱ ⍬⍮⍮⍭⍫⍨⍦⍧⍳⎔",
         startingBid: 150000,
-        decryptionKey: "secreto",
+        decryptionKey: "oblivion",
         imageUrl: "https://images.unsplash.com/photo-1616853291583-b78fc438885b?auto=format&fit=crop&q=80&w=800",
         timestamp: Date.now() - 3600000
     }];
@@ -22,4 +22,22 @@ export const saveAuction = (lot: AuctionLot) => {
 
 export const clearAuctions = () => {
     localStorage.removeItem('arcadia_auctions');
+};
+
+export const getEvents = (): EventMetadata[] => {
+    const saved = localStorage.getItem('arcadia_events');
+    return saved ? JSON.parse(saved) : [{
+        id: "ev_1",
+        originalText: "The password for the vial is oblivion meet at the lake",
+        cipherText: "▪️ 🔑 ▪️ ▪️ 🧪 ▪️ 🌑 🜁 ▪️ ▪️ 🌊",
+        locationName: "The Serpentine Lake",
+        latitude: 51.5055,
+        longitude: -0.1656,
+        timestamp: Date.now() - 3600000
+    }];
+};
+
+export const saveEvent = (event: EventMetadata) => {
+    const events = getEvents();
+    localStorage.setItem('arcadia_events', JSON.stringify([event, ...events]));
 };

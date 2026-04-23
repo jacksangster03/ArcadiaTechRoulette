@@ -26,6 +26,16 @@ export interface AuctionLot {
   timestamp: number;
 }
 
+export interface EventMetadata {
+  id: string;
+  originalText: string;
+  cipherText: string;
+  locationName: string;
+  latitude: number;
+  longitude: number;
+  timestamp: number;
+}
+
 export interface UserSession {
   role: 'Novice' | 'Archivist' | 'Inner Circle';
   joinedAt: number;

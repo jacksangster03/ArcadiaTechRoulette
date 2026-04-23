@@ -1,17 +1,21 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
-import { Terminal, Shield, LogOut } from 'lucide-react';
-import { AuctionLot } from '../types';
-import { getAuctions } from '../services/mockDB';
+import { motion, AnimatePresence } from 'motion/react';
+import { Terminal, Shield, LogOut, Radio, PackageOpen } from 'lucide-react';
+import { AuctionLot, EventMetadata } from '../types';
+import { getAuctions, getEvents } from '../services/mockDB';
 import { AuctionCard } from '../components/AuctionCard';
+import { CipherCard } from '../components/CipherCard';
 import { ai } from '../services/gemini';
 
 export function ArcadiaDashboard({ onAdminToggle, onLogout }: { onAdminToggle: () => void; onLogout: () => void }) {
   const [lots, setLots] = useState<AuctionLot[]>([]);
+  const [events, setEvents] = useState<EventMetadata[]>([]);
+  const [activeTab, setActiveTab] = useState<'VAULT' | 'INTEL'>('VAULT');
   const [prophecy, setProphecy] = useState<string>("Aligning the stars for the next bidding cycle...");
 
   useEffect(() => {
     setLots(getAuctions());
+    setEvents(getEvents());
 
     // Generate daily lore prophecy relevant to an auction
     async function loadLore() {
@@ -26,7 +30,7 @@ export function ArcadiaDashboard({ onAdminToggle, onLogout }: { onAdminToggle: (
       }
     }
     loadLore();
-  }, []);
+  }, [activeTab]); // added to re-fetch when tab switches (so admin additions show)
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-5xl mx-auto py-12">
@@ -45,7 +49,7 @@ export function ArcadiaDashboard({ onAdminToggle, onLogout }: { onAdminToggle: (
 
         <div className="flex flex-wrap gap-4">
           <button onClick={onAdminToggle} className="flex items-center gap-2 px-4 py-2 border border-emerald-500/30 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-emerald-900/20 text-emerald-500 transition-colors">
-            <Terminal className="w-4 h-4" /> Registration
+            <Terminal className="w-4 h-4" /> Transmit / Register
           </button>
           <button onClick={onLogout} className="flex items-center gap-2 px-4 py-2 bg-red-900/20 text-red-400 border border-red-500/20 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-red-900/40 transition-colors">
             <LogOut className="w-4 h-4" /> Disconnect
@@ -60,16 +64,52 @@ export function ArcadiaDashboard({ onAdminToggle, onLogout }: { onAdminToggle: (
          <p className="text-xl md:text-2xl font-serif italic text-slate-300 leading-relaxed max-w-3xl">"{prophecy}"</p>
       </div>
 
+      {/* TABS */}
+      <div className="flex items-center gap-4 mb-8">
+         <button 
+            onClick={() => setActiveTab('VAULT')}
+            className={`flex items-center gap-2 px-6 py-3 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${activeTab === 'VAULT' ? 'bg-emerald-600 text-white' : 'bg-transparent text-slate-500 hover:text-white'}`}
+         >
+            <PackageOpen className="w-4 h-4" /> The Vault
+         </button>
+         <button 
+            onClick={() => setActiveTab('INTEL')}
+            className={`flex items-center gap-2 px-6 py-3 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${activeTab === 'INTEL' ? 'bg-emerald-600 text-white' : 'bg-transparent text-slate-500 hover:text-white'}`}
+         >
+            <Radio className="w-4 h-4" /> Intel Hub
+         </button>
+      </div>
+
       {/* EVENTS / LOTS */}
       <div className="space-y-8">
-        <h3 className="text-emerald-500 font-mono text-sm tracking-widest uppercase">Active Lots</h3>
-        {lots.length === 0 ? (
-          <div className="p-12 text-center text-slate-500 font-mono text-sm tracking-widest uppercase border border-white/5 rounded-3xl border-dashed">No active lots in the vault.</div>
-        ) : (
-          <div className="grid grid-cols-1 gap-6">
-             {lots.map(lot => <AuctionCard key={lot.id} lot={lot} />)}
-          </div>
-        )}
+        <AnimatePresence mode="wait">
+          {activeTab === 'VAULT' && (
+            <motion.div key="vault" initial={{opacity:0, y:10}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-10}}>
+                {lots.length === 0 ? (
+                  <div className="p-12 text-center text-slate-500 font-mono text-sm tracking-widest uppercase border border-white/5 rounded-3xl border-dashed">No active lots in the vault.</div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-6">
+                     {lots.map(lot => <AuctionCard key={lot.id} lot={lot} />)}
+                  </div>
+                )}
+            </motion.div>
+          )}
+
+          {activeTab === 'INTEL' && (
+            <motion.div key="intel" initial={{opacity:0, y:10}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-10}}>
+               <div className="mb-6 p-4 rounded-xl bg-emerald-900/20 border border-emerald-500/20">
+                  <p className="text-sm font-mono text-emerald-400">Notice: Voice-encrypted hints and decyption keys for vault items are often dropped here by admins.</p>
+               </div>
+               {events.length === 0 ? (
+                  <div className="p-12 text-center text-slate-500 font-mono text-sm tracking-widest uppercase border border-white/5 rounded-3xl border-dashed">No intel transmissions captured.</div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-6">
+                     {events.map(ev => <CipherCard key={ev.id} event={ev} />)}
+                  </div>
+                )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </motion.div>
   );

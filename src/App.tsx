@@ -9,14 +9,23 @@ type RouteState = 'ALCHEMY' | 'INITIATION' | 'DASHBOARD' | 'ADMIN';
 
 export default function App() {
   const [appState, setAppState] = useState<RouteState>('ALCHEMY');
+  const [searchVisible, setSearchVisible] = useState(false);
 
   return (
     <div className="min-h-screen flex flex-col max-w-[1400px] mx-auto overflow-x-hidden">
       {/* GLOBAL HEADER */}
       <header className="p-8 md:p-12 flex justify-between items-end">
         <div className="space-y-1">
-          <p className="text-xs font-bold uppercase tracking-widest text-emerald-800">Alchemy</p>
+          <button 
+             onClick={() => setSearchVisible(s => !s)}
+             className="text-xs font-bold uppercase tracking-widest text-emerald-800 hover:text-emerald-600 transition-colors bg-transparent border-none p-0 cursor-pointer text-left block"
+          >
+            Alchemy
+          </button>
           <h1 className="text-5xl font-serif font-black italic tracking-tighter">The Culinary Vault</h1>
+          {appState === 'ALCHEMY' && (
+            <p className="text-slate-500 font-serif italic pt-2">Alchemy is where the magic happens.</p>
+          )}
         </div>
         <div className="hidden md:flex items-center gap-4 text-sm font-medium">
           <span className="flex items-center gap-2 bg-white px-4 py-2 rounded-full border border-slate-200 shadow-sm">
@@ -34,6 +43,7 @@ export default function App() {
             <AlchemyPage 
               key="alchemy" 
               onTriggerArcadia={() => setAppState('INITIATION')} 
+              searchVisible={searchVisible}
             />
           )}
           

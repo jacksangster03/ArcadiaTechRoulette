@@ -6,7 +6,7 @@ import { RecipeCard } from '../components/RecipeCard';
 import { RecipeDetail } from '../components/RecipeDetail';
 import { Recipe } from '../types';
 
-export function AlchemyPage({ onTriggerArcadia }: { onTriggerArcadia: () => void }) {
+export function AlchemyPage({ onTriggerArcadia, searchVisible }: { onTriggerArcadia: () => void; searchVisible: boolean }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>("All Archives");
@@ -36,16 +36,25 @@ export function AlchemyPage({ onTriggerArcadia }: { onTriggerArcadia: () => void
   return (
     <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="flex flex-col space-y-8">
       {/* Global Search Bar */}
-      <div className="relative max-w-2xl">
-        <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-        <input
-          type="text"
-          placeholder="Search the archives, ingredients, or hidden truths..."
-          value={searchQuery}
-          onChange={(e) => handleSearch(e.target.value)}
-          className="w-full bg-white border border-slate-200 rounded-full py-4 pl-16 pr-6 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-lg font-serif italic placeholder:not-italic placeholder:text-slate-400 placeholder:font-sans placeholder:text-sm transition-all"
-        />
-      </div>
+      <AnimatePresence>
+        {searchVisible && (
+          <motion.div 
+            initial={{ opacity: 0, height: 0, marginBottom: 0 }} 
+            animate={{ opacity: 1, height: 'auto', marginBottom: 32 }} 
+            exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+            className="relative max-w-2xl overflow-hidden"
+          >
+            <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search the archives, ingredients, or hidden truths..."
+              value={searchQuery}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="w-full bg-white border border-slate-200 rounded-full py-4 pl-16 pr-6 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-lg font-serif italic placeholder:not-italic placeholder:text-slate-400 placeholder:font-sans placeholder:text-sm transition-all"
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence mode="wait">
         {selectedRecipe && !searchQuery ? (
