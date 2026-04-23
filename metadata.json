@@ -1,0 +1,6 @@
+{
+  "name": "Alchemy",
+  "description": "An editorial recipe website with a hidden AI-powered secret hub unlocked via vision and speech.",
+  "requestFramePermissions": ["camera", "microphone"],
+  "majorCapabilities": []
+}
