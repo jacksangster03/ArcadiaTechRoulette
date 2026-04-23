@@ -16,7 +16,10 @@ import {
   X,
   RefreshCw,
   Sparkles,
-  Search
+  Search,
+  Send,
+  Key,
+  EyeOff
 } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 
@@ -401,11 +404,43 @@ function VisionScanner({ onClose, onSuccess }: { onClose: () => void; onSuccess:
   );
 }
 
+interface ForumMessage {
+  id: string;
+  originalText: string;
+  encryptedText: string;
+  timestamp: number;
+}
+
+const encryptString = (str: string) => str.toLowerCase().split('').map((char: string) => EMOJI_MAP[char] || char).join('');
+
 function ArcadiaHub({ onBack }: { onBack: () => void }) {
   const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [encrypted, setEncrypted] = useState("");
   const recognitionRef = useRef<any>(null);
+
+  const [messages, setMessages] = useState<ForumMessage[]>(() => {
+    const saved = localStorage.getItem('arcadia_messages');
+    if (saved) return JSON.parse(saved);
+    return [
+      {
+        id: '1',
+        originalText: 'the true alchemist seeks not gold but wisdom',
+        encryptedText: encryptString('the true alchemist seeks not gold but wisdom'),
+        timestamp: Date.now() - 3600000,
+      },
+      {
+         id: '2',
+         originalText: 'beware the false prophets of the culinary guild',
+         encryptedText: encryptString('beware the false prophets of the culinary guild'),
+         timestamp: Date.now() - 1800000,
+      }
+    ];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('arcadia_messages', JSON.stringify(messages));
+  }, [messages]);
 
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -418,7 +453,7 @@ function ArcadiaHub({ onBack }: { onBack: () => void }) {
       recognition.onresult = (event: any) => {
         const current = event.results[event.results.length - 1][0].transcript;
         setTranscript(current);
-        const code = current.toLowerCase().split('').map((char: string) => EMOJI_MAP[char] || char).join('');
+        const code = encryptString(current);
         setEncrypted(code);
       };
 
@@ -437,94 +472,195 @@ function ArcadiaHub({ onBack }: { onBack: () => void }) {
     setIsRecording(!isRecording);
   };
 
+  const handlePost = () => {
+    if (!transcript) return;
+    const newMessage = {
+      id: Date.now().toString(),
+      originalText: transcript,
+      encryptedText: encrypted,
+      timestamp: Date.now()
+    };
+    setMessages((prev) => [newMessage, ...prev]);
+    setTranscript("");
+    setEncrypted("");
+    setIsRecording(false);
+    recognitionRef.current?.stop();
+  };
+
   return (
     <motion.div 
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="max-w-4xl mx-auto space-y-12 py-12"
+      className="max-w-6xl mx-auto space-y-12 py-12"
     >
       <div className="text-center space-y-4">
         <button onClick={onBack} className="text-xs font-bold uppercase text-emerald-800 tracking-widest opacity-60 hover:opacity-100 mb-6 transition-opacity flex items-center justify-center gap-1 mx-auto">
           <ChevronRight className="w-4 h-4 rotate-180" />
           Leave Arcadia
         </button>
-        <h2 className="text-7xl md:text-9xl font-serif text-slate-900 leading-none tracking-tighter flex items-center justify-center space-x-4">
-          <Sparkles className="w-12 h-12 md:w-20 md:h-20 text-emerald-600 hidden md:block" />
-          <span className="bg-gradient-to-br from-slate-900 to-slate-700 bg-clip-text text-transparent">Arcadia</span>
+        <h2 className="text-7xl md:text-8xl font-serif text-slate-900 leading-none tracking-tighter flex items-center justify-center space-x-4">
+          <Sparkles className="w-10 h-10 md:w-16 md:h-16 text-emerald-600 hidden md:block" />
+          <span className="bg-gradient-to-br from-slate-900 to-slate-700 bg-clip-text text-transparent">Arcadia Forum</span>
         </h2>
-        <p className="text-sm md:text-base tracking-[0.3em] font-mono uppercase text-emerald-800 opacity-60">Speak your truths. They will be transformed.</p>
+        <p className="text-sm md:text-base tracking-[0.3em] font-mono uppercase text-emerald-800 opacity-60">Speak your truths. Transmute them. Share them.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 h-[400px]">
-        {/* INPUT */}
-        <div className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-xl flex flex-col items-center justify-center space-y-8 relative overflow-hidden group">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-8 h-[600px]">
+        {/* INPUT: The Crucible */}
+        <div className="md:col-span-4 lg:col-span-5 bg-white p-8 rounded-[2rem] border border-slate-200 shadow-xl flex flex-col items-center justify-between relative overflow-hidden group h-full">
           <div className="absolute inset-0 bg-emerald-50/50 opacity-0 group-hover:opacity-100 transition-opacity"></div>
           
-          <div className={`z-10 p-12 rounded-full transition-all duration-700 ${isRecording ? 'bg-red-500/10 scale-110' : 'bg-slate-50 border border-slate-100'}`}>
+          <div className="w-full text-center relative z-10 pt-4">
+            <h3 className="text-xl font-serif italic text-slate-800">The Crucible</h3>
+            <p className="text-[10px] uppercase font-bold tracking-widest text-slate-400 mt-2">Record & Encrypt</p>
+          </div>
+
+          <div className={`z-10 p-8 rounded-full transition-all duration-700 ${isRecording ? 'bg-red-500/10 scale-110' : 'bg-slate-50 border border-slate-100'}`}>
             <button 
               onClick={toggleRecording}
-              className={`p-8 rounded-full transition-all flex items-center justify-center shadow-lg ${isRecording ? 'bg-red-500 text-white animate-pulse shadow-red-500/50' : 'bg-slate-900 text-white hover:scale-110 shadow-slate-900/20'}`}
+              className={`p-6 rounded-full transition-all flex items-center justify-center shadow-lg ${isRecording ? 'bg-red-500 text-white animate-pulse shadow-red-500/50' : 'bg-slate-900 text-white hover:scale-110 shadow-slate-900/20'}`}
             >
               {isRecording ? <MicOff className="w-8 h-8" /> : <Mic className="w-8 h-8" />}
             </button>
           </div>
-          <p className="z-10 text-xs font-bold text-slate-500 uppercase tracking-widest">
-            {isRecording ? "Transmuting your voice..." : "Click to start the ritual"}
-          </p>
-          {transcript && (
-            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="z-10 absolute bottom-8 px-12 text-center text-sm font-serif italic text-slate-600 line-clamp-2">
-              "{transcript}"
-            </motion.p>
-          )}
+          
+          <div className="z-10 w-full flex flex-col items-center space-y-4 pb-4">
+            {transcript ? (
+              <div className="space-y-4 w-full text-center">
+                <p className="text-sm font-serif italic text-slate-600 line-clamp-2">"{transcript}"</p>
+                <div className="text-2xl tracking-widest break-all line-clamp-2 leading-relaxed h-16">{encrypted}</div>
+                <button 
+                  onClick={handlePost}
+                  className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-full font-bold uppercase tracking-widest text-[10px] shadow-lg shadow-emerald-500/20 flex flex-row items-center justify-center space-x-2 transition-all"
+                >
+                  <Send className="w-4 h-4" />
+                  <span>Post to Ledger</span>
+                </button>
+              </div>
+            ) : (
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                {isRecording ? "Transmuting your voice..." : "Click to start the ritual"}
+              </p>
+            )}
+          </div>
         </div>
 
-        {/* OUTPUT */}
-        <div className="bg-[#111827] p-8 rounded-[2rem] shadow-xl flex flex-col justify-between items-center text-center relative overflow-hidden">
+        {/* OUTPUT: The Ledger */}
+        <div className="md:col-span-8 lg:col-span-7 bg-[#111827] p-8 rounded-[2rem] shadow-xl flex flex-col relative overflow-hidden h-full">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-emerald-900/30 via-transparent to-transparent opacity-60"></div>
           
-          <div className="w-full flex justify-between items-center opacity-40 relative z-10">
+          <div className="w-full flex justify-between items-center opacity-40 relative z-10 mb-8 shrink-0">
              <div className="flex space-x-1">
                 <div className="w-2 h-2 rounded-full bg-emerald-400" />
                 <div className="w-2 h-2 rounded-full bg-white opacity-50" />
                 <div className="w-2 h-2 rounded-full bg-white opacity-20" />
              </div>
-             <p className="text-[10px] font-mono leading-none tracking-widest text-white uppercase">Arcadia Cipher v3.0</p>
+             <p className="text-[10px] font-mono leading-none tracking-widest text-white uppercase">The Architect's Ledger</p>
           </div>
 
-          <div className="flex-1 flex items-center justify-center p-6 relative z-10 w-full">
-            <AnimatePresence mode="wait">
-              {encrypted ? (
-                <motion.div 
-                  key="code"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 1.2 }}
-                  className="text-4xl md:text-5xl tracking-widest break-all line-clamp-4 leading-relaxed"
-                >
-                  {encrypted}
-                </motion.div>
-              ) : (
-                <motion.div key="empty" className="space-y-4 opacity-20 user-select-none">
-                   <Lock className="w-16 h-16 mx-auto text-emerald-100" />
-                   <p className="text-white text-[10px] font-mono uppercase tracking-[0.4em]">Awaiting Transmutation</p>
-                </motion.div>
-              )}
-            </AnimatePresence>
+          <div className="flex-1 overflow-y-auto relative z-10 w-full space-y-4 pr-2 custom-scrollbar">
+            {messages.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center space-y-4 opacity-20 user-select-none">
+                 <Lock className="w-16 h-16 mx-auto text-emerald-100" />
+                 <p className="text-white text-[10px] font-mono uppercase tracking-[0.4em]">The Ledger is Empty</p>
+              </div>
+            ) : (
+              <AnimatePresence>
+                {messages.map((msg) => (
+                  <ForumMessageItem key={msg.id} message={msg} />
+                ))}
+              </AnimatePresence>
+            )}
           </div>
-
-          {encrypted && (
-            <button 
-              onClick={() => {
-                navigator.clipboard.writeText(encrypted);
-                alert("Cipher Copied to Clipboard!");
-              }}
-              className="relative z-10 px-8 py-3 bg-emerald-900/50 hover:bg-emerald-800 border border-emerald-500/30 text-emerald-100 text-[10px] uppercase font-bold tracking-widest rounded-full transition-all shadow-lg backdrop-blur-sm"
-            >
-              Copy Cipher
-            </button>
-          )}
         </div>
       </div>
+    </motion.div>
+  );
+}
+
+function ForumMessageItem({ message }: { message: ForumMessage }) {
+  const [isDecrypted, setIsDecrypted] = useState(false);
+  const [isUnlocking, setIsUnlocking] = useState(false);
+  const [keyInput, setKeyInput] = useState("");
+  const [error, setError] = useState("");
+
+  const handleDecrypt = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (keyInput === "Secreto") {
+      setIsDecrypted(true);
+      setIsUnlocking(false);
+      setError("");
+    } else {
+      setError("Invalid alchemical key.");
+    }
+  };
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="bg-white/5 border border-emerald-500/20 backdrop-blur-sm p-6 rounded-2xl relative overflow-hidden group"
+    >
+      <div className="flex justify-between items-center mb-4 opacity-60">
+        <span className="text-[10px] text-emerald-400 font-mono tracking-widest uppercase">Anonymous Scholar</span>
+        <span className="text-[10px] text-slate-400 font-mono">{new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+      </div>
+      
+      <div className={`mb-6 break-words ${isDecrypted ? 'text-xl font-serif text-slate-200 leading-relaxed' : 'text-3xl tracking-widest leading-relaxed'}`}>
+        {isDecrypted ? message.originalText : message.encryptedText}
+      </div>
+
+      <div className="flex items-center gap-3">
+        {!isDecrypted && !isUnlocking && (
+          <button 
+            onClick={() => setIsUnlocking(true)} 
+            className="flex items-center gap-2 px-4 py-2 bg-emerald-900/50 hover:bg-emerald-800 border border-emerald-500/30 text-emerald-200 text-[10px] uppercase font-bold tracking-widest rounded-full transition-all"
+          >
+            <Key className="w-3 h-3" />
+            <span>Decrypt</span>
+          </button>
+        )}
+        
+        {isUnlocking && (
+          <form onSubmit={handleDecrypt} className="flex flex-wrap items-center gap-2 w-full">
+            <input 
+              type="text" 
+              placeholder="Enter Key..." 
+              value={keyInput} 
+              onChange={(e) => setKeyInput(e.target.value)} 
+              autoFocus
+              className="flex-1 min-w-[120px] bg-black/40 border border-white/10 rounded-full px-4 py-2 text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            />
+            <button 
+              type="submit"
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] uppercase font-bold tracking-widest rounded-full transition-all"
+            >
+              Unlock
+            </button>
+            <button 
+              type="button"
+              onClick={() => { setIsUnlocking(false); setError(""); setKeyInput(""); }}
+              className="px-4 py-2 bg-transparent border border-slate-700 text-slate-400 hover:text-white text-[10px] uppercase font-bold tracking-widest rounded-full transition-all"
+            >
+              Cancel
+            </button>
+          </form>
+        )}
+        
+        {isDecrypted && (
+          <button 
+            onClick={() => { setIsDecrypted(false); setKeyInput(""); }} 
+            className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/10 text-slate-300 text-[10px] uppercase font-bold tracking-widest rounded-full transition-all"
+          >
+            <EyeOff className="w-3 h-3" />
+            <span>Conceal</span>
+          </button>
+        )}
+      </div>
+      
+      {error && (
+        <p className="text-red-400 text-xs font-mono mt-3">{error}</p>
+      )}
     </motion.div>
   );
 }
