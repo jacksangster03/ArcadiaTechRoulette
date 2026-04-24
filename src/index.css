@@ -21,3 +21,203 @@
   @apply font-serif;
 }
 
+/* CRT scanline overlay — apply to any dark container */
+.crt-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.crt-effect::after {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.12) 50%),
+              linear-gradient(90deg, rgba(255, 0, 0, 0.015), rgba(0, 255, 0, 0.005), rgba(0, 0, 255, 0.015));
+  z-index: 10;
+  background-size: 100% 4px, 3px 100%;
+  pointer-events: none;
+}
+
+/* Animated scan beam */
+.scanline {
+  width: 100%;
+  height: 100px;
+  z-index: 11;
+  background: linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(255,255,255,0.04) 50%, rgba(0,0,0,0) 100%);
+  position: absolute;
+  bottom: 100%;
+  pointer-events: none;
+  animation: scanline 8s linear infinite;
+}
+
+@keyframes scanline {
+  0%   { bottom: 100%; }
+  100% { bottom: -100px; }
+}
+
+/* Glitch shake — trigger on failed decryption */
+.violent-glitch {
+  animation: violent-shake 0.1s infinite;
+  filter: invert(0.08) contrast(1.2);
+}
+
+@keyframes violent-shake {
+  0%   { transform: translate(0, 0); }
+  25%  { transform: translate(2px, -1px); }
+  50%  { transform: translate(-2px, 1px); }
+  75%  { transform: translate(1px, 2px); }
+  100% { transform: translate(-1px, -2px); }
+}
+
+/* Terminal text glow */
+.terminal-text {
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.15);
+}
+
+.terminal-text-red {
+  text-shadow: 0 0 10px rgba(185, 28, 28, 0.6);
+}
+
+/* CRT Scanline Effect */
+.crt-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%,
+    rgba(0, 0, 0, 0.25) 50%
+  );
+  background-size: 100% 4px;
+}
+
+.crt-overlay::after {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%,
+    rgba(0, 0, 0, 0.1) 50%
+  );
+  background-size: 3px 100%;
+  z-index: 51;
+  pointer-events: none;
+}
+
+/* Violent Glitch Animation */
+.violent-glitch {
+  animation: violent-shake 0.1s infinite;
+  filter: invert(0.1) contrast(1.2);
+}
+
+@keyframes violent-shake {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(2px, -1px); }
+  50% { transform: translate(-2px, 1px); }
+  75% { transform: translate(1px, 2px); }
+  100% { transform: translate(-1px, -2px); }
+}
+
+/* Typewriter Effect */
+.typewriter {
+  overflow: hidden;
+  border-right: 2px solid #22c55e;
+  white-space: nowrap;
+  animation: blink 0.75s step-end infinite;
+}
+
+@keyframes blink {
+  from, to { border-color: transparent; }
+  50% { border-color: #22c55e; }
+}
+
+/* Hacker Terminal Text */
+.terminal-text {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Number Grid Circle */
+.number-circle {
+  transition: all 0.3s ease;
+}
+
+.number-circle:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.5);
+}
+
+.number-circle.selected {
+  background-color: rgba(34, 197, 94, 0.2);
+  border-color: #22c55e;
+  box-shadow: 0 0 15px rgba(34, 197, 94, 0.7);
+}
+
+.number-circle.correct {
+  background-color: rgba(34, 197, 94, 0.4);
+  border-color: #22c55e;
+  animation: violent-shake 0.3s ease;
+}
+
+.number-circle.wrong {
+  background-color: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+  animation: violent-shake 0.5s ease;
+}
+
+/* Secret recipe card — beam of green light orbiting the border */
+
+/* Outer wrapper: faint emerald base (always-visible border) + clips the spinning beam */
+.secret-beam-outer {
+  background: rgba(34, 197, 94, 0.12);
+  /* overflow:hidden is set inline via Tailwind */
+}
+
+/* The spinning conic-gradient "shooting star" */
+.beam-ring {
+  position: absolute;
+  /* Larger than the card so rotating it sweeps across all edges */
+  width: 200%;
+  height: 200%;
+  top: -50%;
+  left: -50%;
+  background: conic-gradient(
+    from 0deg,
+    transparent        0%,
+    transparent        80%,
+    rgba(34,197,94,.12)  84%,
+    rgba(52,211,153,.7)  88%,
+    rgba(134,239,172,1)  91%,
+    rgba(52,211,153,.7)  94%,
+    rgba(34,197,94,.12)  97%,
+    transparent        100%
+  );
+  animation: beam-rotate 2.8s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes beam-rotate {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Cipher number pulse — highlights secret ingredient quantities */
+@keyframes cipher-pulse {
+  0%, 100% { opacity: 1; text-shadow: 0 0 8px rgba(34, 197, 94, 0.7); }
+  50% { opacity: 0.65; text-shadow: 0 0 18px rgba(34, 197, 94, 1); }
+}
+
+.cipher-pulse {
+  animation: cipher-pulse 2.2s ease-in-out infinite;
+}

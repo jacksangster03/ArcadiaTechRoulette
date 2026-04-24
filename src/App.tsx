@@ -5,7 +5,7 @@ import { InitiationPage } from './pages/InitiationPage';
 import { ArcadiaDashboard } from './pages/ArcadiaDashboard';
 import { AdminPanel } from './pages/AdminPanel';
 
-type RouteState = 'ALCHEMY' | 'INITIATION' | 'DASHBOARD' | 'ADMIN';
+type RouteState = 'ALCHEMY' | 'INITIATION' | 'DASHBOARD' | 'ADMIN' | 'HACKER';
 
 export default function App() {
   const [appState, setAppState] = useState<RouteState>('ALCHEMY');

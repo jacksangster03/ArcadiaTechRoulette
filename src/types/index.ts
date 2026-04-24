@@ -58,3 +58,5 @@ export interface UserSession {
   joinedAt: number;
   identity?: MemberIdentity;
 }
+
+export type HackerState = 'STANDBY' | 'SCANNING' | 'BREACHED' | 'LOCKED';

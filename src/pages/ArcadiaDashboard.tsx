@@ -65,7 +65,7 @@ export function ArcadiaDashboard({ onAdminToggle, onLogout }: { onAdminToggle: (
     async function loadLore() {
       try {
         const response = await ai.models.generateContent({
-          model: "gemini-2.5-flash",
+          model: "gemini-2.5-flash-lite",
           contents: "Generate a mysterious, cryptic single-sentence prophecy about a dark, secretive underground hacking network called Arcadia.",
         });
         setProphecy(response.text || "The gavel falls where shadows stretch the longest.");
@@ -142,7 +142,8 @@ export function ArcadiaDashboard({ onAdminToggle, onLogout }: { onAdminToggle: (
   };
 
   return (
-    <div className="min-h-screen bg-black text-zinc-300 font-mono selection:bg-emerald-900/40 selection:text-emerald-100">
+    <div className="min-h-screen bg-black text-zinc-300 font-mono selection:bg-emerald-900/40 selection:text-emerald-100 crt-effect">
+      <div className="scanline" />
       <div className="max-w-7xl mx-auto py-8 md:py-12 px-6 flex flex-col md:flex-row gap-8 md:gap-12">
         {/* Left Sidebar / Nav */}
         <div className="w-full md:w-64 shrink-0 flex flex-col gap-10 border-b border-zinc-900 pb-8 md:pb-0 md:border-b-0 md:border-r pr-6 relative">
@@ -150,7 +151,7 @@ export function ArcadiaDashboard({ onAdminToggle, onLogout }: { onAdminToggle: (
              <div className="w-10 h-10 border border-emerald-900/50 flex items-center justify-center rounded-sm bg-zinc-950 shadow-[0_0_15px_rgba(16,185,129,0.1)]">
                <Terminal className="w-5 h-5 text-emerald-500" />
              </div>
-             <h2 className="text-2xl font-bold text-zinc-100 tracking-[0.2em] uppercase text-shadow-sm shadow-emerald-500/20">Arcadia</h2>
+             <h2 className="text-2xl font-bold text-zinc-100 tracking-[0.2em] uppercase terminal-text">Arcadia</h2>
              <div className="h-[1px] w-full bg-gradient-to-r from-emerald-900/50 to-transparent my-6"></div>
              
              {identity && (

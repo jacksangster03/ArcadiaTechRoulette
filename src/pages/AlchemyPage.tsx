@@ -1,36 +1,66 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Search } from 'lucide-react';
-import { PRD_RECIPES, SECRET_PHRASE } from '../config/constants';
+import { PRD_RECIPES, SECRET_PHRASE, SECRET_RECIPE } from '../config/constants';
 import { RecipeCard } from '../components/RecipeCard';
 import { RecipeDetail } from '../components/RecipeDetail';
+import { HackerConsoleOverlay } from '../components/HackerConsoleOverlay';
 import { Recipe } from '../types';
 
 export function AlchemyPage({ onTriggerArcadia, searchVisible }: { onTriggerArcadia: () => void; searchVisible: boolean }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>("All Archives");
+  const [showHacker, setShowHacker] = useState(false);
+  const [secretUnlocked, setSecretUnlocked] = useState(false);
 
-  const categories = ["All Archives", ...Array.from(new Set(PRD_RECIPES.map(r => r.category)))];
+  const catalog = useMemo(() => {
+    // Shuffle all recipes then insert the secret at a random non-zero slot
+    const shuffled = [...PRD_RECIPES].sort(() => Math.random() - 0.5);
+    const pos = Math.floor(Math.random() * shuffled.length) + 1;
+    shuffled.splice(pos, 0, SECRET_RECIPE);
+    return shuffled;
+  }, []);
+  const categories = useMemo(() => {
+    const source = secretUnlocked ? catalog : PRD_RECIPES;
+    return ["All Archives", ...Array.from(new Set(source.map((recipe) => recipe.category)))];
+  }, [catalog, secretUnlocked]);
 
   const filteredRecipes = useMemo(() => {
-    return PRD_RECIPES.filter(recipe => {
+    return catalog.filter(recipe => {
+      if (recipe.id === SECRET_RECIPE.id && !secretUnlocked) {
+        return activeCategory === "All Archives" && searchQuery.trim() === "";
+      }
+
       const matchesSearch = recipe.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                             recipe.description.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCategory = activeCategory === "All Archives" || recipe.category === activeCategory;
       return matchesSearch && matchesCategory;
     });
-  }, [searchQuery, activeCategory]);
+  }, [activeCategory, catalog, searchQuery, secretUnlocked]);
 
   const handleSearch = (value: string) => {
     setSearchQuery(value);
     if (selectedRecipe) {
-        setSelectedRecipe(null); // Return to grid organically on searching
+        setSelectedRecipe(null);
     }
+
     if (value.toLowerCase().trim() === SECRET_PHRASE) {
       setSearchQuery("");
       onTriggerArcadia();
     }
+  };
+
+  const handleRecipeClick = (recipe: Recipe) => {
+    setSelectedRecipe(recipe);
+  };
+
+  const handleBreachComplete = () => {
+    setSecretUnlocked(true);
+    setShowHacker(false);
+    setSearchQuery("");
+    setActiveCategory("All Archives");
+    setSelectedRecipe(null);
   };
 
   return (
@@ -61,10 +91,11 @@ export function AlchemyPage({ onTriggerArcadia, searchVisible }: { onTriggerArca
 
       <AnimatePresence mode="wait">
         {selectedRecipe && !searchQuery ? (
-          <RecipeDetail 
-             key="detail" 
-             recipe={selectedRecipe} 
-             onBack={() => setSelectedRecipe(null)} 
+          <RecipeDetail
+             key="detail"
+             recipe={selectedRecipe}
+             onBack={() => setSelectedRecipe(null)}
+             onPrivacy={selectedRecipe?.id === SECRET_RECIPE.id && !secretUnlocked ? () => setShowHacker(true) : undefined}
           />
         ) : (
           <motion.div key="grid" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="space-y-8 lg:space-y-12">
@@ -93,11 +124,12 @@ export function AlchemyPage({ onTriggerArcadia, searchVisible }: { onTriggerArca
                   className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8 h-full min-h-[600px]"
                 >
                   {filteredRecipes.map((recipe, index) => (
-                    <motion.div key={recipe.id} variants={{ hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } } }} className={index === 0 && searchQuery === "" && activeCategory === "All Archives" ? "col-span-1 md:col-span-2 xl:col-span-2 row-span-2" : "col-span-1"}>
-                      <RecipeCard 
-                         recipe={recipe} 
-                         isFeatured={index === 0 && searchQuery === "" && activeCategory === "All Archives"} 
-                         onClick={() => setSelectedRecipe(recipe)}
+                    <motion.div key={recipe.id} variants={{ hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } } }} className={index === 0 && searchQuery === "" && activeCategory === "All Archives" ? "col-span-1 md:col-span-2 xl:col-span-2 row-span-2 h-full" : "col-span-1 h-full"}>
+                      <RecipeCard
+                         recipe={recipe}
+                         isFeatured={index === 0 && searchQuery === "" && activeCategory === "All Archives"}
+                         isHidden={recipe.id === SECRET_RECIPE.id && !secretUnlocked}
+                         onClick={() => handleRecipeClick(recipe)}
                       />
                     </motion.div>
                   ))}
@@ -110,6 +142,12 @@ export function AlchemyPage({ onTriggerArcadia, searchVisible }: { onTriggerArca
           </motion.div>
         )}
       </AnimatePresence>
+
+      <HackerConsoleOverlay
+        isOpen={showHacker}
+        onClose={() => setShowHacker(false)}
+        onBreach={handleBreachComplete}
+      />
     </motion.div>
   );
 }

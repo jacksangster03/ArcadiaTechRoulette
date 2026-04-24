@@ -1,8 +1,104 @@
 import { useState, useEffect, useRef, FormEvent } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Sparkles, RefreshCw, Camera } from 'lucide-react';
+import { X, Sparkles, Camera, RefreshCw, Cpu } from 'lucide-react';
+import '@tensorflow/tfjs';
+import * as cocoSsd from '@tensorflow-models/coco-ssd';
+import * as mobilenet from '@tensorflow-models/mobilenet';
 import { ai } from '../services/gemini';
 import { playRitualSound, playAccessGranted } from '../services/audio';
+
+// ImageNet class names associated with a ballpoint pen / thin elongated objects.
+// Cast wide — better a false positive than a missed detection in a demo.
+const PEN_KEYWORDS = [
+  'ballpoint', 'ball point', 'biro',
+  'pen,', ' pen ', 'fountain pen', 'felt',
+  'pencil', 'toothbrush', 'crayon', 'marker', 'stylus',
+  'chopstick', 'candle', 'cigarette', 'cigar', 'straw',
+  'ruler', 'rule,', 'letter opener', 'knitting needle',
+  'nail,', 'spike', 'skewer', 'drumstick',
+];
+const COCO_PEN_CLASSES = ['toothbrush'];
+
+// Extract a center-crop canvas from a video frame (boosts pen prominence vs background)
+function centerCrop(video: HTMLVideoElement, fraction = 0.65): HTMLCanvasElement {
+  const size = Math.min(video.videoWidth, video.videoHeight) * fraction;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d')!;
+  ctx.drawImage(
+    video,
+    (video.videoWidth - size) / 2, (video.videoHeight - size) / 2,
+    size, size,
+    0, 0, size, size,
+  );
+  return canvas;
+}
+
+// Checks MobileNet predictions (full frame + center crop) and COCO detections
+function isPenDetected(
+  fullPreds: { className: string; probability: number }[],
+  cropPreds: { className: string; probability: number }[],
+  cocoPreds: cocoSsd.DetectedObject[],
+): boolean {
+  const matchesKeyword = (p: { className: string; probability: number }, threshold: number) =>
+    p.probability >= threshold && PEN_KEYWORDS.some(kw => p.className.toLowerCase().includes(kw));
+
+  // Full frame: any top-10 match at 2%+
+  if (fullPreds.some(p => matchesKeyword(p, 0.02))) return true;
+  // Center crop: even looser — 1.5% (pen is more dominant in crop)
+  if (cropPreds.some(p => matchesKeyword(p, 0.015))) return true;
+  // COCO toothbrush (same shape as a pen)
+  if (cocoPreds.some(p => COCO_PEN_CLASSES.includes(p.class) && p.score > 0.35)) return true;
+  // Elongation heuristic: any COCO box with extreme aspect ratio (thin stick shape)
+  if (cocoPreds.some(p => {
+    const [, , w, h] = p.bbox;
+    return Math.max(w / h, h / w) > 5 && p.score > 0.4;
+  })) return true;
+  return false;
+}
+
+// Quick single-frame check for the live indicator (no crop, looser threshold)
+function isPenVisibleNow(
+  preds: { className: string; probability: number }[],
+  cocoPreds: cocoSsd.DetectedObject[],
+): boolean {
+  const kwHit = preds.some(p =>
+    p.probability >= 0.015 && PEN_KEYWORDS.some(kw => p.className.toLowerCase().includes(kw))
+  );
+  const cocoHit = cocoPreds.some(p => COCO_PEN_CLASSES.includes(p.class) && p.score > 0.3);
+  return kwHit || cocoHit;
+}
+
+function drawDetections(
+  canvas: HTMLCanvasElement,
+  video: HTMLVideoElement,
+  preds: cocoSsd.DetectedObject[],
+) {
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  preds.forEach(pred => {
+    const [x, y, w, h] = pred.bbox;
+    const isPen = COCO_PEN_CLASSES.includes(pred.class);
+    const alpha = Math.max(0.3, pred.score);
+
+    ctx.strokeStyle = isPen ? `rgba(34,197,94,${alpha})` : `rgba(34,197,94,${alpha * 0.5})`;
+    ctx.lineWidth = isPen ? 2 : 1;
+    ctx.setLineDash(isPen ? [] : [4, 4]);
+    ctx.strokeRect(x, y, w, h);
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = isPen ? 'rgba(34,197,94,0.85)' : 'rgba(34,197,94,0.5)';
+    ctx.font = 'bold 11px monospace';
+    const label = `${pred.class.toUpperCase()} ${Math.round(pred.score * 100)}%`;
+    const labelY = y > 18 ? y - 5 : y + h + 14;
+    ctx.fillText(label, x + 2, labelY);
+  });
+}
 
 export function InitiationPage({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
   const [step, setStep] = useState<'VISION' | 'PUZZLE' | 'RICKROLL'>('VISION');
@@ -14,26 +110,26 @@ export function InitiationPage({ onClose, onSuccess }: { onClose: () => void; on
   return (
     <AnimatePresence mode="wait">
       {step === 'VISION' && (
-        <VisionScanner 
+        <VisionScanner
           key="vision"
-          onClose={onClose} 
+          onClose={onClose}
           onSuccess={() => {
-             playAccessGranted();
-             setStep('PUZZLE');
-          }} 
+            playAccessGranted();
+            setStep('PUZZLE');
+          }}
           onFailure={() => {
-             setStep('RICKROLL');
+            setStep('RICKROLL');
           }}
         />
       )}
       {step === 'PUZZLE' && (
-        <InitiationPuzzle 
-           key="puzzle"
-           onClose={onClose} 
-           onSuccess={() => {
-              playAccessGranted();
-              onSuccess();
-           }} 
+        <InitiationPuzzle
+          key="puzzle"
+          onClose={onClose}
+          onSuccess={() => {
+            playAccessGranted();
+            onSuccess();
+          }}
         />
       )}
       {step === 'RICKROLL' && (
@@ -48,11 +144,10 @@ function RickRollVideo({ onClose }: { onClose: () => void }) {
 
   useEffect(() => {
     if (videoRef.current) {
-      videoRef.current.play().catch(e => {
-        // If the browser blocks unmuted playback due to async delay, fallback to muted autostart.
+      videoRef.current.play().catch(() => {
         if (videoRef.current) {
-           videoRef.current.muted = true;
-           videoRef.current.play().catch(console.error);
+          videoRef.current.muted = true;
+          videoRef.current.play().catch(console.error);
         }
       });
     }
@@ -60,81 +155,174 @@ function RickRollVideo({ onClose }: { onClose: () => void }) {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 bg-black flex items-center justify-center">
-        <div className="absolute top-6 right-6 z-20 flex gap-4 items-center">
-            <button onClick={() => { if(videoRef.current) { videoRef.current.muted = false; videoRef.current.volume = 1; } }} className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-full text-xs font-bold uppercase tracking-widest backdrop-blur-md transition-colors border border-white/20">
-                Unmute
-            </button>
-            <button onClick={onClose} className="p-2 text-white/50 hover:text-white rounded-full transition-colors bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20">
-              <X className="w-5 h-5" />
-            </button>
-        </div>
-        <video 
-            ref={videoRef}
-            autoPlay 
-            playsInline
-            className="w-full h-full object-contain"
-            src="https://archive.org/download/Rick_Astley_Never_Gonna_Give_You_Up/Rick_Astley_Never_Gonna_Give_You_Up.mp4"
-        />
+      <div className="absolute top-6 right-6 z-20 flex gap-4 items-center">
+        <button
+          onClick={() => { if (videoRef.current) { videoRef.current.muted = false; videoRef.current.volume = 1; } }}
+          className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-full text-xs font-bold uppercase tracking-widest backdrop-blur-md transition-colors border border-white/20"
+        >
+          Unmute
+        </button>
+        <button onClick={onClose} className="p-2 text-white/50 hover:text-white rounded-full transition-colors bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20">
+          <X className="w-5 h-5" />
+        </button>
+      </div>
+      <video
+        ref={videoRef}
+        autoPlay
+        playsInline
+        className="w-full h-full object-contain"
+        src="https://archive.org/download/Rick_Astley_Never_Gonna_Give_You_Up/Rick_Astley_Never_Gonna_Give_You_Up.mp4"
+      />
     </motion.div>
   );
 }
 
 function VisionScanner({ onClose, onSuccess, onFailure }: { onClose: () => void; onSuccess: () => void; onFailure: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [stream, setStream] = useState<MediaStream | null>(null);
-  const [analyzing, setAnalyzing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const cocoRef = useRef<cocoSsd.ObjectDetection | null>(null);
+  const mobileNetRef = useRef<mobilenet.MobileNet | null>(null);
+  const detectionLoopRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
+  const [modelsReady, setModelsReady] = useState(false);
+  const [modelLoadError, setModelLoadError] = useState(false);
+  const [cameraReady, setCameraReady] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [scanProgress, setScanProgress] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+  const [liveDetections, setLiveDetections] = useState<cocoSsd.DetectedObject[]>([]);
+  const [penVisible, setPenVisible] = useState(false);
+  const [topLabel, setTopLabel] = useState<string>('');
+  const [loadStep, setLoadStep] = useState<string>('Initialising vision engine...');
+
+  // Load TF models
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        setLoadStep('Loading object detector...');
+        const coco = await cocoSsd.load({ base: 'lite_mobilenet_v2' });
+        if (cancelled) return;
+        cocoRef.current = coco;
+
+        setLoadStep('Loading classifier...');
+        const mn = await mobilenet.load({ version: 2, alpha: 0.5 });
+        if (cancelled) return;
+        mobileNetRef.current = mn;
+
+        setModelsReady(true);
+      } catch {
+        if (!cancelled) setModelLoadError(true);
+      }
+    }
+    load();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Camera setup
   useEffect(() => {
     async function setupCamera() {
       try {
-        const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
-        setStream(s);
-        if (videoRef.current) videoRef.current.srcObject = s;
-      } catch (err) {
-        setError("Camera access denied. Please enable it to proceed.");
+        const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } });
+        streamRef.current = s;
+        if (videoRef.current) {
+          videoRef.current.srcObject = s;
+          videoRef.current.onloadeddata = () => setCameraReady(true);
+        }
+      } catch {
+        setError('Camera access denied. Please enable it to proceed.');
       }
     }
     setupCamera();
-    return () => stream?.getTracks().forEach(t => t.stop());
+    return () => {
+      streamRef.current?.getTracks().forEach(t => t.stop());
+      if (detectionLoopRef.current) clearTimeout(detectionLoopRef.current);
+    };
   }, []);
 
+  // Combined COCO + MobileNet live loop — bounding boxes + pen indicator
+  useEffect(() => {
+    if (!modelsReady || !cameraReady) return;
+    let active = true;
+
+    async function runLoop() {
+      if (!active || !cocoRef.current || !mobileNetRef.current || !videoRef.current || !canvasRef.current) return;
+      if (videoRef.current.readyState === 4) {
+        try {
+          const [cocoPreds, mnPreds] = await Promise.all([
+            cocoRef.current.detect(videoRef.current),
+            mobileNetRef.current.classify(videoRef.current, 5),
+          ]);
+          if (!active) return;
+          setLiveDetections(cocoPreds);
+          drawDetections(canvasRef.current!, videoRef.current, cocoPreds);
+          const detected = isPenVisibleNow(mnPreds, cocoPreds);
+          setPenVisible(detected);
+          // Show top MobileNet label for transparency
+          if (mnPreds.length > 0) setTopLabel(mnPreds[0].className.split(',')[0]);
+        } catch { /* ignore errors during unmount */ }
+      }
+      if (active) detectionLoopRef.current = setTimeout(runLoop, 300);
+    }
+
+    runLoop();
+    return () => {
+      active = false;
+      if (detectionLoopRef.current) clearTimeout(detectionLoopRef.current);
+    };
+  }, [modelsReady, cameraReady]);
+
+  // Multi-frame sampling: collect N frames 300 ms apart, classify each (full + crop), succeed if any hits
   const captureAndAnalyze = async () => {
-    if (!videoRef.current || analyzing) return;
+    if (!videoRef.current || analyzing || !modelsReady) return;
     setAnalyzing(true);
+    setScanProgress(0);
     setError(null);
 
-    const canvas = document.createElement('canvas');
-    canvas.width = videoRef.current.videoWidth;
-    canvas.height = videoRef.current.videoHeight;
-    canvas.getContext('2d')?.drawImage(videoRef.current, 0, 0);
-    const base64Image = canvas.toDataURL('image/jpeg').split(',')[1];
+    const FRAMES = 4;
+    const FRAME_GAP = 300; // ms between samples
+
+    const progressInterval = setInterval(() => {
+      setScanProgress(prev => {
+        if (prev >= 85) { clearInterval(progressInterval); return 85; }
+        return prev + 4;
+      });
+    }, (FRAMES * FRAME_GAP) / 22);
 
     try {
-      const geminiRes = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: [{
-          parts: [
-            { text: "Is the person in this photo holding a BIC PEN? Answer only with 'YES' or 'NO'." },
-            { inlineData: { mimeType: 'image/jpeg', data: base64Image } }
-          ]
-        }],
-      });
-      const result = geminiRes.text?.toUpperCase().includes('YES') ? 'YES' : 'NO';
+      let detected = false;
 
-      if (result === 'YES') {
-        onSuccess();
-      } else {
-        onFailure();
+      for (let i = 0; i < FRAMES && !detected; i++) {
+        if (i > 0) await new Promise(r => setTimeout(r, FRAME_GAP));
+        const video = videoRef.current!;
+        const crop = centerCrop(video);
+        const [fullPreds, cropPreds, cocoPreds] = await Promise.all([
+          mobileNetRef.current!.classify(video, 10),
+          mobileNetRef.current!.classify(crop as unknown as HTMLVideoElement, 10),
+          cocoRef.current!.detect(video),
+        ]);
+        if (isPenDetected(fullPreds, cropPreds, cocoPreds)) detected = true;
       }
-    } catch (err) {
-      setError("Vision algorithm failed. Please try again.");
-    } finally {
-      if (stream) {
+
+      clearInterval(progressInterval);
+      setScanProgress(100);
+
+      setTimeout(() => {
         setAnalyzing(false);
-      }
+        setScanProgress(0);
+        if (detected) onSuccess();
+        else onFailure();
+      }, 450);
+    } catch {
+      clearInterval(progressInterval);
+      setError('Vision algorithm failed. Please try again.');
+      setAnalyzing(false);
+      setScanProgress(0);
     }
   };
+
+  const isReady = modelsReady && cameraReady;
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 bg-[#FAF7F2]/95 backdrop-blur-xl flex items-center justify-center p-6">
@@ -142,32 +330,117 @@ function VisionScanner({ onClose, onSuccess, onFailure }: { onClose: () => void;
         <button onClick={onClose} className="absolute top-8 right-8 p-3 text-slate-500 hover:text-white bg-white/5 hover:bg-white/10 rounded-full z-10 transition-colors border border-white/5">
           <X className="w-5 h-5" />
         </button>
+
         <div className="p-12 md:p-16 space-y-10 text-center">
           <div className="space-y-4">
             <h2 className="text-4xl md:text-5xl font-serif italic text-white flex justify-center items-center gap-4">
-               <Sparkles className="text-emerald-500 w-8 h-8"/> 
-               <span className="bg-gradient-to-r from-emerald-200 to-white bg-clip-text text-transparent">The Alchemist's Gate</span>
-               <Sparkles className="text-emerald-500 w-8 h-8"/>
+              <Sparkles className="text-emerald-500 w-8 h-8" />
+              <span className="bg-gradient-to-r from-emerald-200 to-white bg-clip-text text-transparent">The Alchemist's Gate</span>
+              <Sparkles className="text-emerald-500 w-8 h-8" />
             </h2>
             <p className="text-[10px] tracking-[0.3em] uppercase text-emerald-500/80 font-bold">Hold up your catalyst (a BIC PEN) to access Arcadia</p>
           </div>
+
+          {/* Camera + canvas overlay */}
           <div className="relative aspect-video bg-black rounded-3xl overflow-hidden border border-white/5 shadow-inner">
             <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover opacity-80" />
-            <div className="absolute inset-0 border-2 border-dashed border-emerald-500/30 m-8 rounded-xl pointer-events-none" />
+
+            {/* Bounding box canvas — sits over the video */}
+            <canvas
+              ref={canvasRef}
+              className="absolute inset-0 w-full h-full pointer-events-none"
+              style={{ objectFit: 'cover' }}
+            />
+
+            {/* Corner scan-frame overlay */}
+            <div className="absolute inset-0 pointer-events-none">
+              <div className="absolute top-6 left-6 w-8 h-8 border-t-2 border-l-2 border-emerald-500/60 rounded-tl-lg" />
+              <div className="absolute top-6 right-6 w-8 h-8 border-t-2 border-r-2 border-emerald-500/60 rounded-tr-lg" />
+              <div className="absolute bottom-6 left-6 w-8 h-8 border-b-2 border-l-2 border-emerald-500/60 rounded-bl-lg" />
+              <div className="absolute bottom-6 right-6 w-8 h-8 border-b-2 border-r-2 border-emerald-500/60 rounded-br-lg" />
+            </div>
+
+            {/* Model loading overlay */}
+            {!isReady && !modelLoadError && (
+              <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center gap-4 backdrop-blur-sm">
+                <Cpu className="w-8 h-8 text-emerald-400 animate-pulse" />
+                <p className="text-[10px] text-emerald-400 uppercase tracking-[0.3em] font-mono font-bold">{loadStep}</p>
+                <div className="flex gap-1">
+                  {[0, 1, 2].map(i => (
+                    <motion.div key={i} className="w-1.5 h-1.5 bg-emerald-500 rounded-full"
+                      animate={{ opacity: [0.3, 1, 0.3] }}
+                      transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Model load error */}
+            {modelLoadError && (
+              <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center gap-3">
+                <p className="text-red-400 text-xs font-mono uppercase tracking-widest">Vision engine failed to load</p>
+                <p className="text-slate-500 text-[10px]">Use the dev override below</p>
+              </div>
+            )}
+
+            {/* Scan progress overlay */}
             {analyzing && (
-              <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-white space-y-4 backdrop-blur-md">
-                <RefreshCw className="w-10 h-10 text-emerald-400 animate-spin" />
-                <p className="text-[10px] text-emerald-400 uppercase tracking-[0.2em] font-mono font-bold">Analyzing Catalyst...</p>
+              <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center text-white space-y-6 backdrop-blur-md px-12">
+                <p className="text-[10px] text-emerald-400 uppercase tracking-[0.3em] font-mono font-bold">Scanning Catalyst...</p>
+                <div className="w-full space-y-2">
+                  <div className="flex justify-between text-[9px] font-mono uppercase text-emerald-500/70">
+                    <span>Vision Analysis</span>
+                    <span>{scanProgress}%</span>
+                  </div>
+                  <div className="h-[2px] w-full bg-zinc-800 overflow-hidden">
+                    <motion.div
+                      className="h-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"
+                      animate={{ width: `${scanProgress}%` }}
+                      transition={{ ease: 'linear', duration: 0.08 }}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Live pen detection indicator */}
+            {isReady && !analyzing && (
+              <div className={`absolute top-4 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-1.5 rounded-full border transition-all duration-500 ${penVisible ? 'bg-emerald-950/90 border-emerald-500/50' : 'bg-black/60 border-white/10'}`}>
+                <div className={`w-1.5 h-1.5 rounded-full transition-colors ${penVisible ? 'bg-emerald-400 animate-pulse' : 'bg-slate-600'}`} />
+                <span className={`text-[10px] font-mono uppercase tracking-widest font-bold transition-colors ${penVisible ? 'text-emerald-400' : 'text-slate-500'}`}>
+                  {penVisible ? 'Catalyst Detected' : topLabel ? topLabel : 'Awaiting Catalyst...'}
+                </span>
               </div>
             )}
           </div>
+
+          {/* Live detection labels */}
+          {isReady && !analyzing && liveDetections.length > 0 && (
+            <div className="flex flex-wrap gap-2 justify-center">
+              {liveDetections.slice(0, 5).map((d, i) => (
+                <span key={i} className={`text-[9px] font-mono uppercase tracking-widest px-2 py-1 rounded border ${COCO_PEN_CLASSES.includes(d.class) ? 'text-emerald-400 border-emerald-500/40 bg-emerald-950/60' : 'text-slate-500 border-slate-700/40 bg-slate-900/40'}`}>
+                  {d.class} {Math.round(d.score * 100)}%
+                </span>
+              ))}
+            </div>
+          )}
+
           <div className="h-4">
-            {error && <motion.p initial={{opacity: 0}} animate={{opacity:1}} className="text-red-400 text-xs tracking-widest uppercase font-mono font-bold">{error}</motion.p>}
+            {error && (
+              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-red-400 text-xs tracking-widest uppercase font-mono font-bold">{error}</motion.p>
+            )}
           </div>
-          <button disabled={analyzing} onClick={captureAndAnalyze} className="w-full py-5 bg-emerald-600/90 text-white rounded-full font-bold uppercase tracking-[0.2em] shadow-[0_10px_30px_rgb(16,185,129,0.3)] flex items-center justify-center gap-3 hover:bg-emerald-500 transition-all hover:-translate-y-1 hover:shadow-[0_20px_40px_rgb(16,185,129,0.4)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 text-sm border border-emerald-500/50">
+
+          <button
+            disabled={analyzing || !isReady}
+            onClick={captureAndAnalyze}
+            className="w-full py-5 bg-emerald-600/90 text-white rounded-full font-bold uppercase tracking-[0.2em] shadow-[0_10px_30px_rgb(16,185,129,0.3)] flex items-center justify-center gap-3 hover:bg-emerald-500 transition-all hover:-translate-y-1 hover:shadow-[0_20px_40px_rgb(16,185,129,0.4)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 text-sm border border-emerald-500/50"
+          >
             <Camera className="w-5 h-5" />
-            <span>Present Catalyst</span>
+            <span>{!isReady ? 'Loading Vision Engine...' : 'Present Catalyst'}</span>
           </button>
+
           <button onClick={onSuccess} className="w-full py-3 bg-transparent text-emerald-500/50 hover:text-emerald-400 rounded-full font-bold uppercase tracking-[0.2em] text-[10px] transition-colors border border-transparent hover:border-emerald-500/30">
             [DEV] Override Vision Scanner
           </button>
@@ -179,7 +452,7 @@ function VisionScanner({ onClose, onSuccess, onFailure }: { onClose: () => void;
 
 function InitiationPuzzle({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
   const [puzzle, setPuzzle] = useState<{ q: string, a: string } | null>(null);
-  const [answer, setAnswer] = useState("");
+  const [answer, setAnswer] = useState('');
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -188,16 +461,16 @@ function InitiationPuzzle({ onClose, onSuccess }: { onClose: () => void; onSucce
     async function loadPuzzle() {
       try {
         const response = await ai.models.generateContent({
-          model: "gemini-2.5-flash",
-          contents: "Generate a short, cryptic initiation riddle suitable for a mysterious society. Output JSON strictly matching this shape: {\"question\": \"...\", \"answer\": \"single word\"}. No markdown.",
+          model: 'gemini-2.5-flash-lite',
+          contents: 'Generate a short, cryptic initiation riddle suitable for a mysterious society. Output JSON strictly matching this shape: {"question": "...", "answer": "single word"}. No markdown.',
         });
         if (!active) return;
-        const text = response.text || "";
+        const text = response.text || '';
         const cleanJson = text.replace(/```json/gi, '').replace(/```/g, '').trim();
         const json = JSON.parse(cleanJson);
         setPuzzle({ q: json.question, a: json.answer });
-      } catch (err) {
-        if (active) setPuzzle({ q: "I open without a key and close without a lock. What am I?", a: "egg" });
+      } catch {
+        if (active) setPuzzle({ q: 'I open without a key and close without a lock. What am I?', a: 'egg' });
       } finally {
         if (active) setLoading(false);
       }
@@ -220,12 +493,12 @@ function InitiationPuzzle({ onClose, onSuccess }: { onClose: () => void; onSucce
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 bg-[#0f1423] flex items-center justify-center p-6">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-emerald-900/10 via-[#0f1423] to-[#0f1423] pointer-events-none"></div>
       <button onClick={onClose} className="absolute top-8 right-8 p-3 text-slate-500 hover:text-white bg-white/5 hover:bg-white/10 rounded-full z-10 transition-colors border border-white/5">
-          <X className="w-5 h-5" />
+        <X className="w-5 h-5" />
       </button>
-      
+
       <div className="max-w-2xl w-full z-10 text-center space-y-12">
         <h2 className="text-emerald-500 font-mono tracking-[0.4em] uppercase text-[10px] font-bold">Initiation Rite</h2>
-        
+
         {loading ? (
           <div className="flex flex-col items-center text-emerald-500/50 space-y-6">
             <RefreshCw className="w-10 h-10 animate-spin" />
@@ -235,7 +508,7 @@ function InitiationPuzzle({ onClose, onSuccess }: { onClose: () => void; onSucce
           <form onSubmit={handleSubmit} className="space-y-16">
             <p className="text-4xl md:text-5xl font-serif text-white italic leading-tight drop-shadow-md">"{puzzle?.q}"</p>
             <div className="flex flex-col items-center space-y-4">
-              <input 
+              <input
                 type="text"
                 autoFocus
                 value={answer}
@@ -245,11 +518,11 @@ function InitiationPuzzle({ onClose, onSuccess }: { onClose: () => void; onSucce
               />
               <button type="submit" className="px-8 py-3 mt-4 bg-emerald-900 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-800 rounded-full text-xs font-bold uppercase tracking-widest transition-colors shadow-lg">Submit Truth</button>
               <button type="button" onClick={onSuccess} className="mt-2 text-emerald-500/50 hover:text-emerald-400 font-bold uppercase tracking-widest text-[10px] transition-colors">
-                 [DEV] Override Puzzle
+                [DEV] Override Puzzle
               </button>
             </div>
             <div className="h-4">
-              {error && <motion.p initial={{opacity:0}} animate={{opacity:1}} className="text-red-500 font-mono text-[10px] tracking-[0.3em] font-bold uppercase">Incorrect. The Architect watches.</motion.p>}
+              {error && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-red-500 font-mono text-[10px] tracking-[0.3em] font-bold uppercase">Incorrect. The Architect watches.</motion.p>}
             </div>
           </form>
         )}

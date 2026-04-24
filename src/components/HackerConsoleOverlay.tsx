@@ -1,0 +1,263 @@
+import { useEffect, useMemo, useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
+import { Cpu, ShieldAlert, X } from 'lucide-react';
+import { NUMBER_SEQUENCE } from '../config/constants';
+import type { HackerState } from '../types';
+import {
+  playTerminalBreach,
+  playTerminalClick,
+  playTerminalError,
+  playTerminalSuccess,
+} from '../services/audio';
+
+interface HackerConsoleOverlayProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onBreach: () => void;
+}
+
+const GRID_NUMBERS = Array.from({ length: 16 }, (_, index) => index + 1);
+const WAITING_MESSAGE = '> WAITING_FOR_KEY_SEQUENCE...';
+
+function nextSessionId() {
+  return Math.random().toString(16).slice(2, 10).toUpperCase();
+}
+
+export function HackerConsoleOverlay({ isOpen, onClose, onBreach }: HackerConsoleOverlayProps) {
+  const [status, setStatus] = useState<HackerState>('STANDBY');
+  const [terminalMessage, setTerminalMessage] = useState(WAITING_MESSAGE);
+  const [typedMessage, setTypedMessage] = useState('');
+  const [selectedNumbers, setSelectedNumbers] = useState<number[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [wrongNumber, setWrongNumber] = useState<number | null>(null);
+  const [integrity, setIntegrity] = useState(0);
+  const [integrityError, setIntegrityError] = useState(false);
+  const [breachCelebration, setBreachCelebration] = useState(false);
+  const [sessionId, setSessionId] = useState(nextSessionId());
+
+  const expectedRemaining = useMemo(() => NUMBER_SEQUENCE.slice(currentIndex), [currentIndex]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    setStatus('STANDBY');
+    setTerminalMessage(WAITING_MESSAGE);
+    setTypedMessage('');
+    setSelectedNumbers([]);
+    setCurrentIndex(0);
+    setWrongNumber(null);
+    setIntegrity(0);
+    setIntegrityError(false);
+    setBreachCelebration(false);
+    setSessionId(nextSessionId());
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    let index = 0;
+    setTypedMessage('');
+
+    const interval = window.setInterval(() => {
+      index += 1;
+      setTypedMessage(terminalMessage.slice(0, index));
+
+      if (index >= terminalMessage.length) {
+        window.clearInterval(interval);
+      }
+    }, 18);
+
+    return () => window.clearInterval(interval);
+  }, [isOpen, terminalMessage]);
+
+  const resetAfterFailure = () => {
+    setStatus('STANDBY');
+    setTerminalMessage(WAITING_MESSAGE);
+    setSelectedNumbers([]);
+    setCurrentIndex(0);
+    setWrongNumber(null);
+    setIntegrity(0);
+    setIntegrityError(false);
+    setBreachCelebration(false);
+  };
+
+  const handleNumberClick = (value: number) => {
+    if (!isOpen || status === 'LOCKED' || status === 'BREACHED') {
+      return;
+    }
+
+    playTerminalClick();
+
+    const expected = NUMBER_SEQUENCE[currentIndex];
+
+    if (value !== expected) {
+      playTerminalError();
+      setWrongNumber(value);
+      setStatus('LOCKED');
+      setIntegrityError(true);
+      setTerminalMessage('> ERROR: ACCESS_DENIED // TRACE_ACTIVE');
+
+      window.setTimeout(() => {
+        resetAfterFailure();
+      }, 1500);
+      return;
+    }
+
+    playTerminalSuccess();
+
+    const nextIndex = currentIndex + 1;
+    const nextSelectedNumbers = [...selectedNumbers, value];
+
+    setSelectedNumbers(nextSelectedNumbers);
+    setCurrentIndex(nextIndex);
+    setIntegrity(nextIndex * 10);
+    setStatus(nextIndex === NUMBER_SEQUENCE.length ? 'BREACHED' : 'SCANNING');
+    setTerminalMessage(`> SEGMENT_${nextIndex} VERIFIED`);
+
+    if (nextIndex < NUMBER_SEQUENCE.length) {
+      window.setTimeout(() => {
+        setStatus('STANDBY');
+        setTerminalMessage(WAITING_MESSAGE);
+      }, 420);
+      return;
+    }
+
+    playTerminalBreach();
+    setBreachCelebration(true);
+    setTerminalMessage('> ACCESS_GRANTED // DECRYPTING_PAYLOAD...');
+
+    window.setTimeout(() => {
+      setTerminalMessage('> PAYLOAD: THE_OBSIDIAN_CIPHER_TORTE');
+    }, 700);
+
+    window.setTimeout(() => {
+      setTerminalMessage('> TRANSMISSION: ET_IN_ARCADIA_EGO');
+    }, 1500);
+
+    window.setTimeout(() => {
+      onBreach();
+    }, 3200);
+  };
+
+  return (
+    <AnimatePresence>
+      {isOpen ? (
+        <motion.div
+          key="hacker-overlay"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className={`fixed inset-0 z-[90] bg-black/95 p-4 md:p-8 flex items-center justify-center ${integrityError || breachCelebration ? 'violent-glitch' : ''}`}
+        >
+          <div className="crt-overlay" />
+
+          <motion.div
+            initial={{ y: 24, scale: 0.98 }}
+            animate={{ y: 0, scale: 1 }}
+            exit={{ y: 24, scale: 0.98 }}
+            className="relative w-full max-w-6xl h-[88vh] border border-[#22c55e]/40 bg-black shadow-[0_0_40px_rgba(34,197,94,0.25)] overflow-hidden"
+          >
+            <div className="absolute inset-0 bg-gradient-to-b from-[#22c55e]/5 to-transparent pointer-events-none" />
+
+            <div className="relative z-10 h-full flex flex-col">
+              <header className="h-12 border-b border-[#22c55e]/30 flex items-center justify-between px-4 md:px-6 bg-[#22c55e]/10 terminal-text text-[#22c55e]">
+                <div className="flex items-center gap-2 text-[10px] md:text-xs font-bold">
+                  <Cpu className="w-3.5 h-3.5" />
+                  <span>882.GATE.NETWORK // NODE_HACKER_CONSOLE</span>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <p className="text-[10px] md:text-xs font-bold">STATUS: {status}</p>
+                  <button
+                    onClick={onClose}
+                    className="p-1.5 border border-[#22c55e]/50 hover:bg-[#22c55e]/20 transition-colors"
+                    aria-label="Close hacker console"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </header>
+
+              <div className="flex-1 min-h-0 p-4 md:p-6 grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-4 md:gap-6 text-[#22c55e] terminal-text">
+                <section className="border border-[#22c55e]/30 bg-[#0a0a0a] p-4 md:p-5 flex flex-col gap-5 min-h-0">
+                  <div>
+                    <p className="text-[11px] opacity-90 typewriter inline-block">{typedMessage}</p>
+                    <p className="text-[10px] opacity-60 mt-1">INPUT EXPECTED: {NUMBER_SEQUENCE.length} NODES</p>
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-3 md:gap-4 border border-dashed border-[#22c55e]/25 p-3 md:p-4">
+                    {GRID_NUMBERS.map((num) => {
+                      const isSelected = selectedNumbers.includes(num);
+                      const isWrong = wrongNumber === num;
+
+                      return (
+                        <button
+                          key={num}
+                          type="button"
+                          onClick={() => handleNumberClick(num)}
+                          disabled={status === 'LOCKED' || status === 'BREACHED'}
+                          className={`number-circle h-12 md:h-14 rounded-full border text-xs md:text-sm font-bold ${
+                            isWrong
+                              ? 'wrong'
+                              : isSelected
+                                ? 'selected correct'
+                                : 'border-[#22c55e]/40 hover:border-[#22c55e]'
+                          }`}
+                        >
+                          {num}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className={`${integrityError ? 'violent-glitch' : ''}`}>
+                    <div className="flex items-center justify-between text-[10px] mb-2">
+                      <div className="flex items-center gap-2">
+                        <ShieldAlert className="w-3.5 h-3.5" />
+                        <span>SYSTEM_INTEGRITY</span>
+                      </div>
+                      <span>{integrity}%</span>
+                    </div>
+                    <div className="h-2 border border-[#22c55e]/35 bg-[#031005] overflow-hidden">
+                      <motion.div
+                        animate={{ width: `${integrity}%` }}
+                        className={`h-full ${integrityError ? 'bg-red-500' : 'bg-[#22c55e] shadow-[0_0_12px_rgba(34,197,94,0.8)]'}`}
+                      />
+                    </div>
+                  </div>
+                </section>
+
+                <section className="border border-[#22c55e]/30 bg-[#050505] p-4 md:p-5 flex flex-col min-h-0">
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-[#22c55e]/80 mb-3">Log_Dump</p>
+
+                  <div className="flex-1 overflow-y-auto text-[11px] space-y-1 leading-relaxed pr-1">
+                    <p>&gt; SOURCE: The_Obsidian_Cipher_Torte.blog</p>
+                    <p>&gt; NODE_GRID: [1..16]</p>
+                    <p>&gt; REQUIRED_SEQUENCE: [{NUMBER_SEQUENCE.join(', ')}]</p>
+                    <p>&gt; CURRENT_INPUT: [{selectedNumbers.join(', ')}]</p>
+                    <p>&gt; REMAINING: [{expectedRemaining.join(', ')}]</p>
+                    {status === 'BREACHED' ? (
+                      <>
+                        <p className="text-[#22c55e] mt-3">&gt;&gt; ACCESS_GRANTED // PAYLOAD_UNLOCKED</p>
+                        <p className="text-[#22c55e] font-bold text-sm mt-3 tracking-widest animate-pulse">&gt;&gt; ET IN ARCADIA EGO</p>
+                      </>
+                    ) : null}
+                  </div>
+
+                  <footer className="pt-4 mt-4 border-t border-[#22c55e]/20 flex items-center justify-between text-[10px] text-[#22c55e]/70">
+                    <span>SESSION: {sessionId}</span>
+                    <span>882.GATE.NETWORK</span>
+                  </footer>
+                </section>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      ) : null}
+    </AnimatePresence>
+  );
+}
