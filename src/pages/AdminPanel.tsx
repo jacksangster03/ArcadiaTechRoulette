@@ -56,7 +56,8 @@ export function AdminPanel({ onBack }: { onBack: () => void }) {
       startingBid: parseInt(startingBid) || 0,
       decryptionKey: decryptionKey,
       imageUrl: imageUrl || "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&q=80&w=800",
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      bids: []
     };
 
     saveAuction(newLot);
