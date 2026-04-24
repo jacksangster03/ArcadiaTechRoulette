@@ -5,7 +5,7 @@ import { ai } from '../services/gemini';
 import { playRitualSound, playAccessGranted } from '../services/audio';
 
 export function InitiationPage({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
-  const [step, setStep] = useState<'VISION' | 'PUZZLE'>('VISION');
+  const [step, setStep] = useState<'VISION' | 'PUZZLE' | 'RICKROLL'>('VISION');
 
   useEffect(() => {
     playRitualSound();
@@ -21,6 +21,9 @@ export function InitiationPage({ onClose, onSuccess }: { onClose: () => void; on
              playAccessGranted();
              setStep('PUZZLE');
           }} 
+          onFailure={() => {
+             setStep('RICKROLL');
+          }}
         />
       )}
       {step === 'PUZZLE' && (
@@ -33,11 +36,50 @@ export function InitiationPage({ onClose, onSuccess }: { onClose: () => void; on
            }} 
         />
       )}
+      {step === 'RICKROLL' && (
+        <RickRollVideo key="rickroll" onClose={onClose} />
+      )}
     </AnimatePresence>
   );
 }
 
-function VisionScanner({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
+function RickRollVideo({ onClose }: { onClose: () => void }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.play().catch(e => {
+        // If the browser blocks unmuted playback due to async delay, fallback to muted autostart.
+        if (videoRef.current) {
+           videoRef.current.muted = true;
+           videoRef.current.play().catch(console.error);
+        }
+      });
+    }
+  }, []);
+
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 bg-black flex items-center justify-center">
+        <div className="absolute top-6 right-6 z-20 flex gap-4 items-center">
+            <button onClick={() => { if(videoRef.current) { videoRef.current.muted = false; videoRef.current.volume = 1; } }} className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-full text-xs font-bold uppercase tracking-widest backdrop-blur-md transition-colors border border-white/20">
+                Unmute
+            </button>
+            <button onClick={onClose} className="p-2 text-white/50 hover:text-white rounded-full transition-colors bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20">
+              <X className="w-5 h-5" />
+            </button>
+        </div>
+        <video 
+            ref={videoRef}
+            autoPlay 
+            playsInline
+            className="w-full h-full object-contain"
+            src="https://archive.org/download/Rick_Astley_Never_Gonna_Give_You_Up/Rick_Astley_Never_Gonna_Give_You_Up.mp4"
+        />
+    </motion.div>
+  );
+}
+
+function VisionScanner({ onClose, onSuccess, onFailure }: { onClose: () => void; onSuccess: () => void; onFailure: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
@@ -85,40 +127,51 @@ function VisionScanner({ onClose, onSuccess }: { onClose: () => void; onSuccess:
       if (text.includes("YES")) {
         onSuccess();
       } else {
-        setError("Alchemy requires the correct catalyst (a BIC pen). Try again.");
+        onFailure();
       }
     } catch (err) {
       setError("Vision algorithm failed. Please try again.");
     } finally {
-      setAnalyzing(false);
+      if (stream) {
+         setAnalyzing(false);
+      }
     }
   };
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 bg-[#FAF7F2]/95 backdrop-blur-md flex items-center justify-center p-6">
-      <div className="max-w-2xl w-full bg-[#111827] rounded-[2rem] shadow-2xl overflow-hidden border border-emerald-500/20 relative">
-        <button onClick={onClose} className="absolute top-6 right-6 p-2 text-slate-400 hover:text-white rounded-full z-10 transition-colors">
-          <X className="w-6 h-6" />
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 bg-[#FAF7F2]/95 backdrop-blur-xl flex items-center justify-center p-6">
+      <div className="max-w-3xl w-full bg-[#111827] rounded-[3rem] shadow-[0_40px_100px_rgb(0,0,0,0.5)] overflow-hidden border border-white/5 relative">
+        <button onClick={onClose} className="absolute top-8 right-8 p-3 text-slate-500 hover:text-white bg-white/5 hover:bg-white/10 rounded-full z-10 transition-colors border border-white/5">
+          <X className="w-5 h-5" />
         </button>
-        <div className="p-12 space-y-8 text-center">
-          <div className="space-y-2">
-            <h2 className="text-4xl font-serif italic text-white flex justify-center items-center gap-3"><Sparkles className="text-emerald-400"/> The Alchemist's Gate <Sparkles className="text-emerald-400"/></h2>
-            <p className="text-sm tracking-widest uppercase text-emerald-400/70">Hold up your catalyst (a BIC PEN) to access Arcadia</p>
+        <div className="p-12 md:p-16 space-y-10 text-center">
+          <div className="space-y-4">
+            <h2 className="text-4xl md:text-5xl font-serif italic text-white flex justify-center items-center gap-4">
+               <Sparkles className="text-emerald-500 w-8 h-8"/> 
+               <span className="bg-gradient-to-r from-emerald-200 to-white bg-clip-text text-transparent">The Alchemist's Gate</span>
+               <Sparkles className="text-emerald-500 w-8 h-8"/>
+            </h2>
+            <p className="text-[10px] tracking-[0.3em] uppercase text-emerald-500/80 font-bold">Hold up your catalyst (a BIC PEN) to access Arcadia</p>
           </div>
-          <div className="relative aspect-video bg-black rounded-xl overflow-hidden border border-white/10 shadow-inner">
+          <div className="relative aspect-video bg-black rounded-3xl overflow-hidden border border-white/5 shadow-inner">
             <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover opacity-80" />
-            <div className="absolute inset-0 border-2 border-dashed border-emerald-500/30 m-8 rounded-lg pointer-events-none" />
+            <div className="absolute inset-0 border-2 border-dashed border-emerald-500/30 m-8 rounded-xl pointer-events-none" />
             {analyzing && (
-              <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-white space-y-4 backdrop-blur-sm">
-                <RefreshCw className="w-12 h-12 text-emerald-400 animate-spin" />
-                <p className="text-xs text-emerald-400 uppercase tracking-widest font-mono font-semibold">Analyzing Catalyst...</p>
+              <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-white space-y-4 backdrop-blur-md">
+                <RefreshCw className="w-10 h-10 text-emerald-400 animate-spin" />
+                <p className="text-[10px] text-emerald-400 uppercase tracking-[0.2em] font-mono font-bold">Analyzing Catalyst...</p>
               </div>
             )}
           </div>
-          {error && <motion.p className="text-red-400 text-sm font-mono font-medium">{error}</motion.p>}
-          <button disabled={analyzing} onClick={captureAndAnalyze} className="w-full py-4 bg-emerald-600 text-white rounded-full font-bold uppercase tracking-widest shadow-lg shadow-emerald-500/20 flex items-center justify-center space-x-3 hover:bg-emerald-500 transition-colors disabled:opacity-50">
+          <div className="h-4">
+            {error && <motion.p initial={{opacity: 0}} animate={{opacity:1}} className="text-red-400 text-xs tracking-widest uppercase font-mono font-bold">{error}</motion.p>}
+          </div>
+          <button disabled={analyzing} onClick={captureAndAnalyze} className="w-full py-5 bg-emerald-600/90 text-white rounded-full font-bold uppercase tracking-[0.2em] shadow-[0_10px_30px_rgb(16,185,129,0.3)] flex items-center justify-center gap-3 hover:bg-emerald-500 transition-all hover:-translate-y-1 hover:shadow-[0_20px_40px_rgb(16,185,129,0.4)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 text-sm border border-emerald-500/50">
             <Camera className="w-5 h-5" />
             <span>Present Catalyst</span>
+          </button>
+          <button onClick={onSuccess} className="w-full py-3 bg-transparent text-emerald-500/50 hover:text-emerald-400 rounded-full font-bold uppercase tracking-[0.2em] text-[10px] transition-colors border border-transparent hover:border-emerald-500/30">
+            [DEV] Override Vision Scanner
           </button>
         </div>
       </div>
@@ -166,35 +219,40 @@ function InitiationPuzzle({ onClose, onSuccess }: { onClose: () => void; onSucce
   };
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 bg-[#111827] flex items-center justify-center p-6">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-emerald-900/20 via-[#111827] to-[#111827]"></div>
-      <button onClick={onClose} className="absolute top-6 right-6 p-2 text-slate-400 hover:text-white rounded-full z-10 transition-colors">
-          <X className="w-6 h-6" />
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 bg-[#0f1423] flex items-center justify-center p-6">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-emerald-900/10 via-[#0f1423] to-[#0f1423] pointer-events-none"></div>
+      <button onClick={onClose} className="absolute top-8 right-8 p-3 text-slate-500 hover:text-white bg-white/5 hover:bg-white/10 rounded-full z-10 transition-colors border border-white/5">
+          <X className="w-5 h-5" />
       </button>
       
-      <div className="max-w-xl w-full z-10 text-center space-y-8">
-        <h2 className="text-emerald-400 font-mono tracking-[0.3em] uppercase text-xs">Initiation Rite</h2>
+      <div className="max-w-2xl w-full z-10 text-center space-y-12">
+        <h2 className="text-emerald-500 font-mono tracking-[0.4em] uppercase text-[10px] font-bold">Initiation Rite</h2>
         
         {loading ? (
-          <div className="flex flex-col items-center text-white opacity-50 space-y-4">
-            <RefreshCw className="w-8 h-8 animate-spin" />
-            <p className="font-serif italic text-emerald-200">Receiving transmission from the Architect...</p>
+          <div className="flex flex-col items-center text-emerald-500/50 space-y-6">
+            <RefreshCw className="w-10 h-10 animate-spin" />
+            <p className="font-serif italic text-emerald-200/50 md:text-lg">Receiving transmission from the Architect...</p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-12">
-            <p className="text-3xl md:text-5xl font-serif text-white italic leading-relaxed">{puzzle?.q}</p>
+          <form onSubmit={handleSubmit} className="space-y-16">
+            <p className="text-4xl md:text-5xl font-serif text-white italic leading-tight drop-shadow-md">"{puzzle?.q}"</p>
             <div className="flex flex-col items-center space-y-4">
               <input 
                 type="text"
                 autoFocus
                 value={answer}
                 onChange={(e) => setAnswer(e.target.value)}
-                placeholder="Type your answer..."
-                className={`bg-transparent border-b-2 ${error ? 'border-red-500 text-red-400' : 'border-white/20 text-white focus:border-emerald-500'} w-64 text-center py-2 text-xl font-mono focus:outline-none transition-colors`}
+                placeholder="Declare your truth..."
+                className={`bg-transparent border-b-2 ${error ? 'border-red-500 text-red-500' : 'border-emerald-500/30 text-emerald-100 focus:border-emerald-400'} w-64 text-center py-3 text-2xl font-mono focus:outline-none transition-colors placeholder:text-emerald-900/40`}
               />
-              <button type="submit" className="opacity-0 w-0 h-0">Submit</button>
+              <button type="submit" className="px-8 py-3 mt-4 bg-emerald-900 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-800 rounded-full text-xs font-bold uppercase tracking-widest transition-colors shadow-lg">Submit Truth</button>
+              <button type="button" onClick={onSuccess} className="mt-2 text-emerald-500/50 hover:text-emerald-400 font-bold uppercase tracking-widest text-[10px] transition-colors">
+                 [DEV] Override Puzzle
+              </button>
             </div>
-            {error && <p className="text-red-400 font-mono text-sm tracking-widest">Incorrect. The Architect watches.</p>}
+            <div className="h-4">
+              {error && <motion.p initial={{opacity:0}} animate={{opacity:1}} className="text-red-500 font-mono text-[10px] tracking-[0.3em] font-bold uppercase">Incorrect. The Architect watches.</motion.p>}
+            </div>
           </form>
         )}
       </div>

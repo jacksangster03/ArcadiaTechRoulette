@@ -14,25 +14,27 @@ export default function App() {
   return (
     <div className="min-h-screen flex flex-col max-w-[1400px] mx-auto overflow-x-hidden">
       {/* GLOBAL HEADER */}
-      <header className="p-8 md:p-12 flex justify-between items-end">
-        <div className="space-y-1">
+      <header className="p-8 md:p-12 md:pb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-6 relative z-10">
+        <div className="space-y-3">
           <button 
              onClick={() => setSearchVisible(s => !s)}
-             className="text-xs font-bold uppercase tracking-widest text-emerald-800 hover:text-emerald-600 transition-colors bg-transparent border-none p-0 cursor-pointer text-left block"
+             className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-800 hover:text-emerald-500 transition-colors bg-emerald-900/5 hover:bg-emerald-900/10 px-3 py-1.5 rounded-full cursor-pointer text-left inline-block"
           >
             Alchemy
           </button>
-          <h1 className="text-5xl font-serif font-black italic tracking-tighter">The Culinary Vault</h1>
+          <h1 className="text-5xl md:text-6xl font-serif font-black italic tracking-tighter text-slate-900 leading-none">The Culinary Vault</h1>
           {appState === 'ALCHEMY' && (
-            <p className="text-slate-500 font-serif italic pt-2">Alchemy is where the magic happens.</p>
+            <p className="text-slate-500 font-serif italic text-lg opacity-80 pl-1">Alchemy is where the magic happens.</p>
           )}
         </div>
-        <div className="hidden md:flex items-center gap-4 text-sm font-medium">
-          <span className="flex items-center gap-2 bg-white px-4 py-2 rounded-full border border-slate-200 shadow-sm">
-            <div className={`w-2 h-2 rounded-full bg-emerald-500 ${appState !== 'ALCHEMY' && appState !== 'INITIATION' ? 'opacity-100' : 'animate-pulse'}`}></div> 
+        <div className="flex flex-col md:flex-row items-end md:items-center gap-4 text-xs font-medium">
+          <button onClick={() => setAppState('DASHBOARD')} className="bg-red-500/10 text-red-600 hover:bg-red-500/20 px-4 py-2 rounded-full border border-red-500/20 shadow-sm font-bold tracking-widest uppercase transition-colors">
+             Override (Dev Bypass)
+          </button>
+          <span className="flex items-center gap-2 bg-white/80 backdrop-blur-md px-4 py-2 rounded-full border border-slate-200/50 shadow-sm text-slate-600">
+            <div className={`w-1.5 h-1.5 rounded-full bg-emerald-500 ${appState !== 'ALCHEMY' && appState !== 'INITIATION' ? 'opacity-100' : 'animate-pulse'}`}></div> 
             {appState === 'ALCHEMY' ? "System Secure" : "Syndicate Auction Active"}
           </span>
-          <span className="text-slate-400 font-mono text-[10px]">v3.0.0-alchemy</span>
         </div>
       </header>
 

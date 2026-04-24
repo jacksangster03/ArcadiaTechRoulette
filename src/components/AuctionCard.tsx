@@ -19,35 +19,35 @@ export function AuctionCard({ lot }: { lot: AuctionLot }) {
   };
 
   return (
-    <div className="bg-[#1a2235] rounded-[2rem] p-8 border border-white/10 shadow-2xl overflow-hidden relative group text-slate-300">
-      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-teal-500 opacity-50 block"></div>
-      
-      <div className="flex justify-between items-start mb-6">
-        <span className="text-[10px] font-mono tracking-widest uppercase text-emerald-400 font-bold bg-emerald-900/40 px-3 py-1 rounded-full border border-emerald-500/20">Sealed Lot</span>
-        <span className="text-[10px] text-slate-500 font-mono tracking-widest uppercase">ID: {lot.id.split('_')[1] || lot.id}</span>
+    <div className="bg-black rounded-sm p-8 md:p-10 border border-zinc-900 shadow-2xl relative group text-zinc-300">
+      <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-red-900 via-red-900/50 to-transparent block"></div>
+
+      <div className="flex justify-between items-start mb-8 relative z-10">
+        <span className="text-[10px] font-mono tracking-[0.2em] uppercase text-red-600 font-bold bg-red-950/30 px-4 py-1.5 border border-red-900/20">Sealed Lot</span>
+        <span className="text-[10px] text-zinc-500 font-mono tracking-widest uppercase mt-2">ID: {lot.id.split('_')[1] || lot.id}</span>
       </div>
 
       <AnimatePresence mode="wait">
         {!unlocked ? (
-          <motion.div key="locked" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="space-y-6">
-            <div className="py-4 border-b border-white/5">
-              <h3 className="text-2xl font-mono text-emerald-500 leading-relaxed break-words">{lot.cipherTitle}</h3>
-              <p className="text-sm font-mono text-slate-600 mt-4 leading-relaxed break-words">{lot.cipherDescription}</p>
+          <motion.div key="locked" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="space-y-8 relative z-10">
+            <div className="py-8 border-y border-zinc-900 bg-zinc-950/20 -mx-4 px-4">
+              <h3 className="text-2xl md:text-3xl font-mono text-zinc-200 leading-relaxed break-words tracking-widest">{lot.cipherTitle}</h3>
+              <p className="text-sm md:text-base font-mono text-zinc-500 mt-6 leading-relaxed break-words opacity-80">{lot.cipherDescription}</p>
             </div>
             
-            <div className="flex items-center gap-4 text-slate-400">
+            <div className="flex items-center gap-4 text-zinc-400">
                 <Gavel className="w-5 h-5" />
-                <span className="font-mono text-sm tracking-widest">Starting Bid: ???</span>
+                <span className="font-mono text-sm tracking-[0.2em] uppercase">Starting Bid: ???</span>
             </div>
 
             <div className="pt-6 relative">
                 {error && (
-                   <motion.p initial={{opacity: 0, y: -10}} animate={{opacity: 1, y: 0}} className="absolute -top-4 left-0 text-red-400 text-[10px] uppercase tracking-widest font-bold flex items-center gap-1">
+                   <motion.p initial={{opacity: 0, y: -10}} animate={{opacity: 1, y: 0}} className="absolute -top-4 left-0 text-red-500 text-[10px] uppercase tracking-widest font-bold flex items-center gap-1">
                       <AlertCircle className="w-3 h-3" /> Integrity Check Failed
                    </motion.p>
                 )}
-                <div className="flex bg-[#0f1423] rounded-full border border-white/10 overflow-hidden focus-within:border-emerald-500/50 transition-colors">
-                    <div className="pl-4 py-3 flex items-center justify-center text-slate-500">
+                <div className="flex bg-zinc-950 border border-zinc-800 outline outline-1 outline-transparent focus-within:outline-red-900/50 transition-all">
+                    <div className="pl-4 py-3 flex items-center justify-center text-zinc-600">
                         <KeyRound className="w-4 h-4" />
                     </div>
                     <input 
@@ -56,11 +56,11 @@ export function AuctionCard({ lot }: { lot: AuctionLot }) {
                         value={keyInput}
                         onChange={(e) => setKeyInput(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleUnlock()}
-                        className="w-full bg-transparent border-none text-sm font-mono text-white placeholder-slate-600 focus:ring-0 px-4 py-3 outline-none"
+                        className="w-full bg-transparent border-none text-sm font-mono text-zinc-200 placeholder-zinc-700 outline-none px-4 py-3 uppercase tracking-widest"
                     />
                     <button 
                         onClick={handleUnlock}
-                        className="px-6 bg-emerald-600/20 text-emerald-400 font-bold uppercase tracking-widest text-[10px] hover:bg-emerald-600/40 transition-colors border-l border-white/10"
+                        className="px-8 bg-zinc-900 text-zinc-400 font-bold uppercase tracking-[0.2em] text-[10px] hover:bg-zinc-800 hover:text-zinc-200 transition-colors border-l border-zinc-800"
                     >
                         Decrypt
                     </button>
@@ -68,31 +68,34 @@ export function AuctionCard({ lot }: { lot: AuctionLot }) {
             </div>
           </motion.div>
         ) : (
-          <motion.div key="unlocked" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="space-y-6">
-            <div className="flex gap-6">
-               <div className="w-1/3 shrink-0">
-                  <div className="aspect-square rounded-2xl overflow-hidden border border-white/10 relative">
-                     <div className="absolute inset-0 bg-emerald-500/10 mix-blend-overlay z-10 pointer-events-none"></div>
-                     <img src={lot.imageUrl} alt={lot.originalTitle} className="w-full h-full object-cover grayscale opacity-80" />
+          <motion.div key="unlocked" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="space-y-8 relative z-10">
+            <div className="flex flex-col md:flex-row gap-10">
+               <div className="w-full md:w-[45%] shrink-0">
+                  <div className="aspect-[4/5] overflow-hidden border border-zinc-800 relative shadow-2xl group-hover:border-zinc-600 transition-all">
+                     <div className="absolute inset-0 bg-black/20 mix-blend-overlay z-10 pointer-events-none"></div>
+                     <img src={lot.imageUrl} alt={lot.originalTitle} className="w-full h-full object-cover grayscale opacity-90 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700" />
                   </div>
                </div>
-               <div className="w-2/3 space-y-4">
-                  <h3 className="text-3xl font-serif text-white">{lot.originalTitle}</h3>
-                  <p className="text-slate-400 text-sm leading-relaxed">{lot.originalDescription}</p>
+               <div className="w-full md:w-[55%] space-y-8 flex flex-col justify-center">
+                  <div>
+                    <div className="inline-block px-3 py-1 bg-red-950/30 text-red-600 text-[9px] uppercase font-bold tracking-[0.3em] border border-red-900/20 mb-4">Decrypted File</div>
+                    <h3 className="text-4xl md:text-5xl font-serif text-zinc-100 leading-[1.1]">{lot.originalTitle}</h3>
+                  </div>
+                  <p className="text-zinc-400 text-base md:text-lg leading-relaxed font-serif italic border-l-[1px] border-red-900/50 pl-6">"{lot.originalDescription}"</p>
                </div>
             </div>
             
-            <div className="flex items-center justify-between pt-6 border-t border-white/5">
-                <div className="flex items-center gap-3">
-                    <div className="bg-[#0f1423] p-3 rounded-xl border border-white/5">
-                        <Gavel className="w-5 h-5 text-emerald-500" />
+            <div className="flex items-center justify-between pt-8 border-t border-zinc-900 mt-8">
+                <div className="flex items-center gap-4">
+                    <div className="bg-zinc-900/50 p-3 rounded-sm border border-zinc-800">
+                        <Gavel className="w-5 h-5 text-zinc-400" />
                     </div>
                     <div>
-                        <p className="text-[10px] uppercase font-bold tracking-widest text-slate-500">Starting Bid</p>
-                        <p className="text-xl font-mono text-white">${lot.startingBid.toLocaleString()}</p>
+                        <p className="text-[10px] uppercase font-mono tracking-widest text-zinc-500">Starting Bid</p>
+                        <p className="text-xl font-mono text-zinc-200">${lot.startingBid.toLocaleString()}</p>
                     </div>
                 </div>
-                <button className="px-6 py-3 bg-emerald-600 text-white rounded-full text-xs font-bold uppercase tracking-widest hover:bg-emerald-500 transition-all shadow-md shadow-emerald-500/20 flex items-center gap-2">
+                <button className="px-8 py-4 bg-zinc-200 text-black text-[10px] font-mono font-bold uppercase tracking-[0.2em] hover:bg-white transition-all shadow-lg flex items-center gap-2">
                     Submit Bid
                 </button>
             </div>

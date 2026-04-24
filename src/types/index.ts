@@ -34,9 +34,27 @@ export interface EventMetadata {
   latitude: number;
   longitude: number;
   timestamp: number;
+  authorId?: string;
+  authorName?: string;
+}
+
+export interface MemberIdentity {
+  id: string;
+  codename: string;
+  joinDate: number;
+}
+
+export interface DirectMessage {
+  id: string;
+  senderId: string;
+  senderName: string;
+  receiverId: string;
+  content: string;
+  timestamp: number;
 }
 
 export interface UserSession {
   role: 'Novice' | 'Archivist' | 'Inner Circle';
   joinedAt: number;
+  identity?: MemberIdentity;
 }
