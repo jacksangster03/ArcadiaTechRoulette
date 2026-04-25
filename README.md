@@ -66,6 +66,8 @@ Arcadia is a two-layer product:
 
 The design goal is to make the reveal feel magical while keeping every step deterministic and demo-safe. Each layer has a `[DEV]` override button so judges never get stuck.
 
+For camera verification, we initially prototyped with Google Cloud Vision API, then moved to on-device TensorFlow.js in the final build to reduce cloud credential/key overhead and avoid quota friction under Gemini API key constraints during the hackathon.
+
 ---
 
 ## Full Demo Flow
