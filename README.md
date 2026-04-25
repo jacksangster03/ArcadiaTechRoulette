@@ -12,6 +12,27 @@ Arcadia is a demo-first web experience built for the GDG Tech Roulette Hackathon
 
 ---
 
+## Hackathon Context
+
+- **Event:** GDG IE University — Build with AI: Tech Roulette Hackathon (Spring 2026)
+- **Team / Group:** Group 7
+- **Assigned Theme:** Secret Societies
+- **Group 7 Members:** Jack Sangster, Paul George, Joel Jin, Yash Kedia, Ajjai Ashok
+
+### Official format points this project follows
+
+- **Challenge window:** April 13-27 (2-week build sprint)
+- **Team format:** 3-5 participants (we are a 5-person team)
+- **Submission package expectation:** one runnable demo path + GitHub repo with detailed README + pitch deck
+- **Submission deadline:** April 25 at 20:00
+- **Final demo day:** April 27 (Google Office, live presentations and judging)
+- **Judging framing from opening ceremony:** win through either concept/presentation quality or technical execution/reliability
+- **Google API emphasis:** extra points for using at least one Google Cloud API
+
+This README is intentionally detailed so judges can quickly understand what Arcadia is, how to run it, and how to traverse the full demo path without blockers.
+
+---
+
 ## Quick Start
 
 ```bash
