@@ -597,16 +597,25 @@ function VisionScanner({ onClose, onSuccess, onFailure }: { onClose: () => void;
     setScanProgress(0);
     setError(null);
 
-    // Burst length depends on whether we already have a live lock.
-    // Pass logic uses majority-after-first-positive to tolerate brief flicker.
-    const FRAMES    = isLockedRef.current ? VISION_CONFIG.BURST_FRAMES_LOCKED : VISION_CONFIG.BURST_FRAMES_COLD;
-    const FRAME_GAP = VISION_CONFIG.BURST_FRAME_GAP_MS;
-    // Lower threshold if already locked (live EMA was already confident)
-    const THRESHOLD = isLockedRef.current
-      ? VISION_CONFIG.CAPTURE_SCORE_THRESHOLD * 0.75
-      : VISION_CONFIG.CAPTURE_SCORE_THRESHOLD;
+    // Fast-pass: live EMA was already locked when button was pressed.
+    // The live detection loop already confirmed the key over multiple frames,
+    // so skip the burst entirely and pass immediately.
+    if (isLockedRef.current) {
+      setScanProgress(100);
+      setShowPassFlash(true);
+      setTimeout(() => {
+        analyzingRef.current = false;
+        setScanProgress(0);
+        onSuccess();
+      }, 450);
+      return;
+    }
 
-    // Animate progress bar over the expected burst duration
+    // Cold burst: not locked at press time, run full scan window.
+    const FRAMES    = VISION_CONFIG.BURST_FRAMES_COLD;
+    const FRAME_GAP = VISION_CONFIG.BURST_FRAME_GAP_MS;
+    const THRESHOLD = VISION_CONFIG.CAPTURE_SCORE_THRESHOLD;
+
     const totalMs = FRAMES * FRAME_GAP;
     progressRef.current = setInterval(() => {
       setScanProgress(prev => {
@@ -654,20 +663,13 @@ function VisionScanner({ onClose, onSuccess, onFailure }: { onClose: () => void;
       setTimeout(() => {
         analyzingRef.current = false;
         setScanProgress(0);
-        // Restore live state
-        setScannerState(isLockedRef.current ? 'CATALYST_LOCKED' : 'READY_AWAITING');
-        if (detected) {
-          onSuccess();
-          return;
-        }
-
-        // Saw some catalyst signal but it was unstable: keep user in gate.
+        setScannerState('READY_AWAITING');
+        if (detected) { onSuccess(); return; }
+        // Key was seen briefly but not consistently: let user retry, don't rick-roll.
         if (firstPositiveIndex >= 0) {
           setError('Catalyst signal unstable. Hold steady and retry.');
           return;
         }
-
-        // True no-signal path keeps existing fail behavior.
         onFailure();
       }, 450);
     } catch (e) {
@@ -676,7 +678,7 @@ function VisionScanner({ onClose, onSuccess, onFailure }: { onClose: () => void;
       setError('Vision algorithm failed. Please try again.');
       analyzingRef.current = false;
       setScanProgress(0);
-      setScannerState(isLockedRef.current ? 'CATALYST_LOCKED' : 'READY_AWAITING');
+      setScannerState('READY_AWAITING');
     }
   }, [onSuccess, onFailure, setScannerState]);
 
