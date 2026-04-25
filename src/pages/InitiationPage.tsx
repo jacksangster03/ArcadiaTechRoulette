@@ -322,6 +322,7 @@ function VisionScanner({ onClose, onSuccess, onFailure }: { onClose: () => void;
   const [topLabel, setTopLabel] = useState<string>('');
   const [loadStep, setLoadStep] = useState<string>('Initializing catalyst scanner...');
   const [loadNonce, setLoadNonce] = useState(0);
+  const [showPassFlash, setShowPassFlash] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -442,6 +443,7 @@ function VisionScanner({ onClose, onSuccess, onFailure }: { onClose: () => void;
 
       clearInterval(progressInterval);
       setScanProgress(100);
+      if (detected) setShowPassFlash(true);
 
       setTimeout(() => {
         setAnalyzing(false);
@@ -487,6 +489,25 @@ function VisionScanner({ onClose, onSuccess, onFailure }: { onClose: () => void;
               <div className="absolute bottom-6 left-6 w-8 h-8 border-b-2 border-l-2 border-emerald-500/60 rounded-bl-lg" />
               <div className="absolute bottom-6 right-6 w-8 h-8 border-b-2 border-r-2 border-emerald-500/60 rounded-br-lg" />
             </div>
+
+            {isReady && !analyzing && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="fx-ring-1 w-20 h-20 rounded-full border border-emerald-500/25" />
+                <div className="fx-ring-2 absolute w-36 h-36 rounded-full border border-emerald-500/15" />
+                <div className="fx-ring-3 absolute w-52 h-52 rounded-full border border-emerald-500/08" />
+              </div>
+            )}
+
+            {isReady && keyVisible && !analyzing && (
+              <div className="absolute bottom-0 inset-x-0 h-0.5 bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.9)]" />
+            )}
+
+            {showPassFlash && (
+              <div
+                className="fx-pass-flash absolute inset-0 z-50 pointer-events-none rounded-3xl"
+                onAnimationEnd={() => setShowPassFlash(false)}
+              />
+            )}
 
             {!isReady && !modelLoadError && (
               <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center gap-4 backdrop-blur-sm">

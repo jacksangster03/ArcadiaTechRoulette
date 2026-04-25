@@ -88,6 +88,9 @@ export function HackerConsoleOverlay({ isOpen, onClose, onBreach }: HackerConsol
   const [sequenceInput, setSequenceInput] = useState('');
   const [typedValidationState, setTypedValidationState] = useState<InputValidationState>('IDLE');
   const [typedValidationMessage, setTypedValidationMessage] = useState('');
+  const [booted, setBooted] = useState(false);
+  const [sparkedNum, setSparkedNum] = useState<number | null>(null);
+  const [showStatic, setShowStatic] = useState(false);
   const timeoutRefs = useRef<number[]>([]);
   const logDumpRef = useRef<HTMLDivElement | null>(null);
 
@@ -152,6 +155,9 @@ export function HackerConsoleOverlay({ isOpen, onClose, onBreach }: HackerConsol
     setSequenceInput('');
     setTypedValidationState('IDLE');
     setTypedValidationMessage('');
+    setBooted(false);
+    setShowStatic(false);
+    setSparkedNum(null);
   }, [isOpen]);
 
   useEffect(() => {
@@ -242,6 +248,7 @@ export function HackerConsoleOverlay({ isOpen, onClose, onBreach }: HackerConsol
       setWrongNumber(value);
       setStatus('LOCKED');
       setIntegrityError(true);
+      setShowStatic(true);
       setTerminalMessage('> ERROR: ACCESS_DENIED // TRACE_ACTIVE');
 
       schedule(() => {
@@ -251,6 +258,7 @@ export function HackerConsoleOverlay({ isOpen, onClose, onBreach }: HackerConsol
     }
 
     playTerminalSuccess();
+    setSparkedNum(value);
 
     const nextIndex = currentIndex + 1;
     const nextSelectedNumbers = [...selectedNumbers, value];
@@ -317,6 +325,18 @@ export function HackerConsoleOverlay({ isOpen, onClose, onBreach }: HackerConsol
           className={`fixed inset-0 z-[90] bg-black/95 p-4 md:p-8 flex items-center justify-center ${integrityError || breachCelebration ? 'violent-glitch' : ''}`}
         >
           <div className="crt-overlay" />
+          {!booted && (
+            <div
+              className="fx-boot-scan absolute inset-0 z-30 pointer-events-none"
+              onAnimationEnd={() => setBooted(true)}
+            />
+          )}
+          {showStatic && (
+            <div
+              className="fx-static-burst absolute inset-0 z-[100] pointer-events-none"
+              onAnimationEnd={() => setShowStatic(false)}
+            />
+          )}
 
           <motion.div
             initial={{ y: 24, scale: 0.98 }}
@@ -381,7 +401,7 @@ export function HackerConsoleOverlay({ isOpen, onClose, onBreach }: HackerConsol
                           type="button"
                           onClick={() => handleNumberClick(num)}
                           disabled={status === 'LOCKED' || status === 'BREACHED'}
-                          className={`number-circle hacker-grid-cell-subdivide h-12 md:h-14 rounded-full border text-xs md:text-sm font-bold ${
+                          className={`number-circle hacker-grid-cell-subdivide h-12 md:h-14 rounded-full border text-xs md:text-sm font-bold relative overflow-hidden ${
                             isWrong
                               ? 'wrong'
                               : isSelected
@@ -390,6 +410,12 @@ export function HackerConsoleOverlay({ isOpen, onClose, onBreach }: HackerConsol
                           }`}
                         >
                           {num}
+                          {sparkedNum === num && (
+                            <span
+                              className="fx-spark absolute inset-0 pointer-events-none"
+                              onAnimationEnd={() => setSparkedNum(null)}
+                            />
+                          )}
                         </button>
                       );
                     })}

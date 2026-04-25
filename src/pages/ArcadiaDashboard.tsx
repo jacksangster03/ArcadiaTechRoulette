@@ -284,7 +284,7 @@ export function ArcadiaDashboard({ onAdminToggle, onLogout }: { onAdminToggle: (
                  <p className="text-zinc-600">Active Alias</p>
                  <p className="text-emerald-400 border border-emerald-900/30 px-3 py-2 bg-emerald-950/20 inline-block shadow-inner">{identity.codename}</p>
                  <div className="flex items-center gap-2 pt-2">
-                   <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse"></div>
+                   <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.8)] fx-net-pulse"></div>
                    <span className="text-[9px] text-zinc-500">Secure Protocol Active</span>
                  </div>
               </div>
@@ -338,7 +338,7 @@ export function ArcadiaDashboard({ onAdminToggle, onLogout }: { onAdminToggle: (
         </div>
 
         {/* Main Content Area */}
-        <div className="flex-1 w-full min-w-0">
+        <div className={`flex-1 w-full min-w-0 transition-colors duration-500 ${activeTab === 'INTEL' ? 'tab-theme-intel' : activeTab === 'VAULT' ? 'tab-theme-vault' : 'tab-theme-comms'}`}>
           
           {/* LORE NOTICE */}
           <div className="mb-12 border-l border-emerald-900/50 pl-6 py-4 relative group bg-gradient-to-r from-emerald-950/20 to-transparent backdrop-blur-sm border-y border-zinc-900/50">
