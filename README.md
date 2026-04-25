@@ -2,20 +2,34 @@
 
 A hidden operating system for secret societies: access by rite, communication by symbol.
 
-Arcadia is a demo-first web experience built for a hackathon setting. It is intentionally narrow, ritualized, and reliable: one coherent happy path that can be run repeatedly in front of judges.
+Arcadia is a demo-first web experience built for the GDG Tech Roulette Hackathon (April 2026). It is intentionally narrow, ritualized, and reliable: one coherent happy path that can be run repeatedly in front of judges.
 
-## Submission Snapshot
+- **Live demo:** [arcadiatechroulette.vercel.app](https://arcadiatechroulette.vercel.app/)
+- **Repository:** [github.com/jacksangster03/ArcadiaTechRoulette](https://github.com/jacksangster03/ArcadiaTechRoulette)
 
-- **Repo:** https://github.com/jacksangster03/ArcadiaTechRoulette
-- **Run locally (single command):**
-  ```bash
-  npm install && npm run dev
-  ```
-- **Dev URL:** `http://localhost:3001`
-- **Optional backend helper:**
-  ```bash
-  npx tsx server.ts
-  ```
+---
+
+## Quick Start
+
+```bash
+npm install
+```
+
+Create `.env.local`:
+
+```env
+GEMINI_API_KEY=your_key_here
+```
+
+```bash
+npm run dev        # http://localhost:3001
+```
+
+Optional backend:
+
+```bash
+npx tsx server.ts
+```
 
 ---
 
@@ -23,294 +37,261 @@ Arcadia is a demo-first web experience built for a hackathon setting. It is inte
 
 Arcadia is a two-layer product:
 
-1. **Public front** (`Alchemy / Culinary Vault`): elegant recipe archive UI with hidden ritual mechanics.
-2. **Hidden system** (`Arcadia`): multi-stage initiation gate + member dashboard + symbolic intel decode.
+1. **Public front** (`Alchemy / Culinary Vault`): an elegant recipe archive UI with hidden ritual mechanics.
+2. **Hidden system** (`Arcadia`): a multi-stage initiation gate, member dashboard, live auction vault, and symbolic intel cipher.
 
-The design goal is to make the reveal feel magical while keeping implementation deterministic and demo-safe.
+The design goal is to make the reveal feel magical while keeping every step deterministic and demo-safe. Each layer has a `[DEV]` override button so judges never get stuck.
 
 ---
 
-## Core Demo Flow (Exact)
+## Full Demo Flow
 
-1. Open **Alchemy**.
-2. Discover/open **The Obsidian Cipher Torte** path.
-3. Trigger **Hacker Console** and complete the number-sequence challenge.
+1. Open **Alchemy** — the Culinary Vault.
+2. Discover **The Obsidian Cipher Torte** recipe path.
+3. Trigger the **Hacker Console** and complete the number-sequence challenge.
 4. Reach the unlocked vault state.
-5. Enter the **Initiation Rite** (full details below):
+5. Enter the **Initiation Rite**:
    - Auth gate (new member or returning alias)
-   - Present catalyst to camera (live ML key detection)
-   - Solve Gemini-generated riddle
-   - Complete **Trial I: Kio Alignment** (cant-axis puzzle)
-   - Complete **Trial II: Ángel Caído** (compass bearing puzzle)
-   - Complete **Trial III: Chamberí Signal** (pentagonal signal sequence puzzle)
+   - Present physical key to camera (live ML detection)
+   - Solve a Gemini-generated cryptic riddle
+   - **Trial I: Kio Alignment** — cant-axis lock puzzle
+   - **Trial II: Ángel Caído** — compass bearing correction
+   - **Trial III: Chamberí Signal** — pentagonal signal sequence
 6. Enter the **Arcadia Dashboard**.
 7. In **Global Intel**, submit a message and show emoji cipher output.
 8. Decode intel using the clue-driven answer.
-9. Reveal original text + location map.
-10. Show **Vault** and **Secure Comms** tabs for system completeness.
+9. Reveal original text and location map.
+10. Enter **The Vault** — browse live auction lots with bidding, NDA, and back-channel chat.
 
 ---
 
-## Product Architecture
+## Architecture
 
-### Frontend
+### Frontend stack
 
 - React 19 + TypeScript + Vite
-- TailwindCSS 4 + custom CSS ritual effects
-- Motion animations via `motion/react`
+- Tailwind CSS v4 (no config file, pure utilities) + custom CSS ritual effects
+- `motion/react` for animations and `AnimatePresence` transitions
 - Web Audio API micro-sound cues
-- TensorFlow.js in-browser object detection and classification for initiation
+- TensorFlow.js (COCO-SSD + MobileNet v2) for in-browser key detection
 
-### Data
+### Data layer
 
-- `localStorage` via `src/services/mockDB.ts`
-- Seeded data for reliability in demos
-- Backward-compatible event schema upgrades
+- `localStorage` via `src/services/mockDB.ts` and `src/services/vaultDB.ts`
+- Seeded data for demo continuity
+- All event/vault schemas are backward-compatible
 
-### Optional Backend
+### Optional backend
 
-- `server.ts` (Express helper)
-- Not required for the main app flow
+- `server.ts` (Express helper, not required for the main flow)
 
 ---
 
-## Exactly How Each Major Screen Works
+## Screen-by-Screen Details
 
-### 1) Alchemy (Culinary Vault)
+### 1) Alchemy — The Culinary Vault
 
-Implemented in:
-- `src/pages/AlchemyPage.tsx`
-- `src/components/RecipeCard.tsx`
-- `src/components/RecipeDetail.tsx`
-- `src/components/HackerConsoleOverlay.tsx`
+**Files:** `src/pages/AlchemyPage.tsx`, `src/components/RecipeCard.tsx`, `src/components/RecipeDetail.tsx`, `src/components/HackerConsoleOverlay.tsx`
 
-What it does:
-- Renders a responsive slot-based archive with one featured hero card and smaller cards.
+- Responsive slot-based recipe archive: one hero card, smaller supporting cards.
 - Supports filtering and search.
-- The Obsidian path drives the unlock journey.
-- Hacker console validates the ritual number sequence.
-
-Notes:
-- Layout uses deterministic slot math and periodic reshuffle.
-- Visual effects (beam ring, CRT/glow, hover depth, parallax) are presentational only.
+- The Obsidian Cipher Torte path drives the unlock journey through `unlockStage` state.
+- Hacker Console validates a ritual number sequence; success sets `isSecretUnlocked`.
+- `[DEV] Open Key Scanner` button at the bottom jumps directly to the Initiation flow.
+- Header `Override (Dev Bypass)` button skips straight to the Dashboard.
 
 ---
 
 ### 2) Initiation
 
-Implemented in:
-- `src/pages/InitiationPage.tsx`
-- `src/components/initiation/TrialShell.tsx`
-- `src/components/initiation/KioAlignmentTrial.tsx`
-- `src/components/initiation/AngelBearingTrial.tsx`
-- `src/components/initiation/ChamberiSignalTrial.tsx`
+**Files:** `src/pages/InitiationPage.tsx`, `src/components/initiation/TrialShell.tsx`, `src/components/initiation/KioAlignmentTrial.tsx`, `src/components/initiation/AngelBearingTrial.tsx`, `src/components/initiation/ChamberiSignalTrial.tsx`
 
-The initiation is a linear state machine with seven steps:
+The initiation is a linear state machine:
 
 ```
-AUTH → VISION → PUZZLE → TRIAL_KIO → TRIAL_ANGEL → TRIAL_CHAMBERI → (onSuccess)
-                   ↓ (failure)
-               RICKROLL
+AUTH → VISION → PUZZLE → TRIAL_KIO → TRIAL_ANGEL → TRIAL_CHAMBERI → onSuccess
+                  ↓ (zero signal)
+              RICKROLL
 ```
 
 #### AUTH gate
 
-Two modes:
-- **Return to Alias**: verifies a device-locked alias string against `mockDB`.
-- **Start New Initiation**: proceeds directly to the vision scanner.
+Two modes: `Return to Alias` (verifies device-locked alias against mockDB) and `Start New Initiation` (proceeds directly to the vision scanner).
 
-#### VISION: Alchemist's Gate (camera-based key detection)
+#### VISION: Alchemist's Gate
 
-The live scanner runs COCO-SSD and MobileNet v2 in-browser at ~5 fps. Each frame produces a composite score from four independent signals:
+Live in-browser ML scanner running COCO-SSD + MobileNet v2 at ~5 fps. Each frame produces a composite score from four signals:
 
 | Signal | Source | Max contribution |
 |---|---|---|
-| COCO class hit | Object detected as scissors, knife, fork, spoon, remote, cell phone, pen, toothbrush | 0.55 + 0.14 centre bonus |
-| Shape prior | Any non-person elongated bbox (aspect ratio 1.4–12.0) when no COCO class hit | 0.30 |
-| MobileNet keyword (full frame) | Probability for labels matching padlock, lock, wrench, bolt, hook, etc. | 0.25 |
-| MobileNet keyword (centre crop) | Same keywords on a 55% centre crop (key fills more of crop) | 0.35 |
+| COCO class hit | scissors, knife, fork, spoon, remote, cell phone, pen, toothbrush | 0.55 + 0.14 centre bonus |
+| Shape prior | Any non-person elongated bbox (ratio 1.4–12.0), fires only when no COCO class matched | 0.30 |
+| MobileNet keyword — full frame | padlock, lock, wrench, bolt, hook, blade, etc. | 0.25 |
+| MobileNet keyword — centre crop | Same keywords on a 55% centre crop | 0.35 |
 
-The raw frame score feeds into an EMA (`α = 0.65`) for temporal smoothing. A hysteresis state machine transitions between five states:
+The raw frame score feeds an EMA (`α = 0.65`). A hysteresis state machine runs:
 
-| State | Badge | Meaning |
+| State | Badge | CTA label |
 |---|---|---|
-| `LOADING` | hidden | Models still initializing |
-| `READY_AWAITING` | grey "Awaiting the Instrument" | Live, no signal |
-| `CATALYST_POSSIBLE` | amber "Catalyst Approaching" | EMA above 0.06 |
-| `CATALYST_LOCKED` | green "Catalyst Locked" + bottom bar | 2 consecutive frames above 0.14 |
-| `ANALYZING` | progress bar | Capture burst in progress |
+| `LOADING` | hidden | Initializing Scanner... |
+| `READY_AWAITING` | grey "Awaiting the Instrument" | Present Catalyst |
+| `CATALYST_POSSIBLE` | amber "Catalyst Approaching" | Present Catalyst |
+| `CATALYST_LOCKED` | green "Catalyst Locked" | Seal the Gate |
+| `ANALYZING` | progress bar | — |
 
-When `CATALYST_LOCKED`, the CTA changes to "Seal the Gate" with a stronger green glow. The capture burst uses 2 frames (vs 4 cold) and a lower per-frame threshold (0.09 vs 0.12) because the live EMA is already confident.
+**Fast-pass:** if the badge is already `CATALYST_LOCKED` when "Seal the Gate" is pressed, the live EMA has already confirmed the key — the burst is skipped and the gate passes immediately. Cold-press (not locked) runs a 7-frame burst with majority-after-first-positive logic: at least 40% of frames from the first positive onward must score above threshold. Brief flicker that doesn't meet majority shows "Catalyst signal unstable. Hold steady and retry." instead of rick-rolling.
 
-Failure sends the user to a Rick Roll video. A `[DEV] Override` button bypasses the scanner for demos.
+A `[DEV] Quick Override` button sits under the title for immediate bypass. A second `[DEV] Override Vision Scanner` button sits below the CTA.
 
 #### PUZZLE: Gemini riddle
 
-A Gemini 1.5 Flash call generates a single-answer cryptic riddle. If the API is unavailable a hardcoded fallback riddle loads instead. Answer matching is case-insensitive, trimmed.
+Gemini 1.5 Flash generates a single-answer cryptic riddle. Hardcoded fallback loads if the API is unavailable. Answer matching is case-insensitive and trimmed.
 
-#### TRIAL I: Kio Alignment (`KioAlignmentTrial`)
+#### TRIAL I: Kio Alignment
 
-Background: aerial photo of the Kio Towers (Madrid).
+**Background:** Kio Towers (Madrid). **File:** `KioAlignmentTrial.tsx`
 
-The puzzle presents a crosshair targeting system on a 400×260 SVG viewport. Two axes (left cant and right cant) must be brought into tolerance simultaneously.
+Two cant axes (left and right) must be brought into ±8° tolerance simultaneously and held for 1 second to seal. Guide lines converge geometrically onto the SVG crosshair centre (200, 130) when both axes are at target. Axes drift sinusoidally once partially aligned. An amber countdown bar shows the hold progress. Stage: ALIGN → HOLD.
 
-Mechanics:
-- Four hold-buttons adjust left/right cant independently.
-- A 1-second hold-lock timer starts when both axes enter tolerance. Releasing early cancels it. An amber progress bar shows the countdown.
-- Both axes drift sinusoidally every 2 seconds once partially aligned, making it slightly harder to hold.
-- A convergence indicator shows how far each axis is from target.
-- Guide lines converge geometrically onto the crosshair centre (SVG point 200, 130) when both axes are at target.
+#### TRIAL II: Ángel Caído
 
-Two stages:
-1. **ALIGN**: find the coarse alignment (±8° tolerance).
-2. **HOLD**: maintain alignment for 1 second to seal.
+**Background:** Ángel Caído statue, Retiro Park (Madrid). **File:** `AngelBearingTrial.tsx`
 
-#### TRIAL II: Ángel Caído (`AngelBearingTrial`)
+Two-stage compass bearing puzzle:
 
-Background: photo of the Ángel Caído statue in Retiro Park (Madrid).
+1. **ACQUIRE:** set bearing to ~231° SSW (±10°). Lore: *"The exiled one watches south-southwest, where Europa rises from the plain."*
+2. **CORRECT:** reduce by 7° for magnetic declination to reach 224° (±3°). Lore: *"Even north deceives. The meridian through Retiro drifts seven degrees toward the setting sun."*
 
-A compass bearing must be set to a specific heading through two stages:
+The compass needle wobble uses `transformBox: fill-box` so it rotates around the needle's own bounding-box centre, not the SVG origin. A proximity bloom ring pulses as the bearing approaches target. Completion word: **LUX**.
 
-1. **ACQUIRE**: orient the compass SSW, roughly 231° (±10°). Lore: "The exiled one watches south-southwest, where Europa rises from the plain."
-2. **CORRECT**: apply a 7° magnetic declination offset, reducing to 224° (±3°). Lore: "Even north deceives. The meridian through Retiro drifts seven degrees toward the setting sun."
+#### TRIAL III: Chamberí Signal
 
-Mechanics:
-- Four hold-buttons adjust bearing in ±1° and ±10° increments. Arrow keys also work.
-- EMA-smoothed proximity bloom ring pulses around the compass as the bearing approaches target.
-- The needle wobbles (CSS animation) when far from target; the wobble pivot uses `transformBox: fill-box` so it rotates around the needle's own centre, not the SVG origin.
-- A mini-map inset shows a bearing ray from the Retiro centre.
-- Stage transition triggers a green radial flash and an audio cue.
-- Completion word: **LUX**.
+**Background:** Chamberí ghost metro station (Madrid). **File:** `ChamberiSignalTrial.tsx`
 
-#### TRIAL III: Chamberí Signal (`ChamberiSignalTrial`)
+A pentagonal node network flashes a sequence of 4–6 nodes. The user replays it within 24 seconds. Nodes are positioned at geometrically precise pentagon coordinates for the 288×240 px container. Wrong input resets to observe phase. Sequence length increases each round. A slow-replay button re-shows the sequence once per round.
 
-Background: photo of Chamberí ghost metro station (Madrid).
+#### TrialShell
 
-A pentagonal node network displays a sequence of signal pulses. The user must replay the sequence in the correct order within 24 seconds.
+Shared wrapper for all three trials. Provides: photo background (opacity 0.52, saturate 0.82) over a dark gradient with a `bg-black/20` veil, step progress bar, stage label badge, close button, and a `[DEV] Override Trial` button (text-[8px], unobtrusive).
 
-Mechanics:
-- Five nodes are positioned at geometrically precise pentagon coordinates for the 288×240px container.
-- Observe phase: sequence of 4–6 nodes flashes with timing cues.
-- Input phase: nodes pulse when hovered; clicking fires a signal. Correct inputs glow green, wrong inputs trigger an error flash and reset to observe.
-- Sequence length increases each round. Round 2 adds one extra node.
-- Progress bar counts down the 24-second input window.
-- A slow-replay button re-shows the current sequence at reduced speed (once per round).
-- Completion fires `onSuccess` after a short delay and plays `playAccessGranted`.
-
-#### `TrialShell`
-
-Shared wrapper used by all three trials. Provides:
-- Full-screen background with a photo layer (opacity 0.42, saturate 0.7, brightness 0.88) over a dark gradient, plus a `bg-black/28` veil for text legibility.
-- Step indicator, stage label badge, close button, and a `[DEV] Override` button.
-- `imageObjectPosition` prop for per-trial photo framing.
+**Background images:** `public/assets/trials/` — `kio-towers.jpg`, `angel-caido.jpg`, `retiro-map.jpg`, `chamberi-platform.jpg`.
 
 ---
 
 ### 3) Arcadia Dashboard
 
-Implemented in:
-- `src/pages/ArcadiaDashboard.tsx`
-- `src/components/CipherCard.tsx`
-- `src/components/AuctionCard.tsx`
+**Files:** `src/pages/ArcadiaDashboard.tsx`, `src/components/CipherCard.tsx`, `src/components/VaultItemCard.tsx`, `src/components/VaultDetail.tsx`, `src/components/VaultNDAModal.tsx`
 
-Tabs:
-- **Global Intel:** create encoded intel + decode challenge.
-- **The Vault:** encrypted lot cards.
-- **Secure Comms:** local shadow-node messaging simulation.
+Two tabs: **Global Intel** and **The Vault**.
 
----
+#### Global Intel — cipher system
 
-## Global Intel Cipher System (Detailed)
+**Files:** `src/logic/cipher.ts`, `src/components/CipherCard.tsx`
 
-Implemented in:
-- `src/logic/cipher.ts`
-- `src/components/CipherCard.tsx`
-- `src/pages/ArcadiaDashboard.tsx`
+Encoding pipeline:
+1. Text is tokenized and normalized.
+2. Known keywords map to curated glyphs (`lake → 🌊`, `meeting → 🜁`, etc.).
+3. Stopwords map to `▪️`.
+4. Unknown words map to a deterministic emoji via hashing (varied, not repeated `💠`).
 
-### Encoding pipeline
+Decode challenge: each event stores `clueType` (`last_emoji` ~80%, `nth_emoji` ~10%, `emoji_count` ~10%), `cluePrompt`, and `expectedAnswer`. The user types the answer as text. `Show Hint` and `Override Decode` prevent judge blockage. Legacy records (older schema) decode via key fallback.
 
-1. Admin/member submits text (typed or speech transcript).
-2. Text is tokenized and normalized.
-3. Tokens are encoded into symbols:
-   - known keywords use a curated map (`lake -> 🌊`, `meeting -> 🜁`, etc.)
-   - stopwords map to a neutral marker (`▪️`)
-   - unknown words map to a deterministic fallback emoji via hashing (varied output, not repeated `💠`)
+#### The Vault — live auction house
 
-### Decode challenge pipeline
+**File:** `src/services/vaultDB.ts`
 
-For each new intel event the app stores clue metadata:
-- `clueType`: one of `last_emoji`, `nth_emoji`, `emoji_count`
-- `cluePrompt`
-- `expectedAnswer`
-- optional `clueMeta`
+20-item lore pool across 6 categories: Relics, Cipher Keys, Black Ledger, Oracular Signals, Initiation Artifacts, Forbidden Archives. Items activate with staggered 2–5 minute timers, expire, and rotate randomly. Each item has:
+- Live price drift with up/down delta indicators
+- Per-item detail view with decryption key unlock
+- Credit-enforced bidding with bid history
+- Per-item back-channel chat
+- Seller alias
 
-Clue type selection is deterministic by event ID, weighted for demo reliability:
-- ~80% `last_emoji`
-- ~10% `nth_emoji`
-- ~10% `emoji_count`
-
-### Current answer mode (UX)
-
-Clues are solved via typed text (easy for demos), not emoji keyboard input.
-- For glyph-based clues, the user types the word represented by the glyph.
-- Includes `Show Hint` and `Override Decode` actions so judges never get blocked.
-- Legacy records (older schema) still decode via key fallback.
+First Vault entry triggers an NDA/Vow modal requiring the closing line before proceeding. Category filter pills and a credit balance bar sit in the sidebar.
 
 ---
 
-## Type/Data Model
+## Tunable Vision Constants
 
-`EventMetadata` supports clue metadata (all optional for backward compatibility):
+All in `VISION_CONFIG` at the top of `InitiationPage.tsx`:
 
-- `clueType?: 'last_emoji' | 'nth_emoji' | 'emoji_count'`
-- `cluePrompt?: string`
-- `expectedAnswer?: string`
-- `clueMeta?: { index?: number }`
+| Constant | Default | Effect |
+|---|---|---|
+| `SCORE_ON_THRESHOLD` | 0.07 | EMA score to enter LOCKED |
+| `SCORE_OFF_THRESHOLD` | 0.03 | EMA score to drop out of LOCKED |
+| `CONSECUTIVE_LOCK_FRAMES` | 2 | Frames above threshold to lock |
+| `EMA_ALPHA` | 0.65 | Reactivity of smoothing (0–1) |
+| `CAPTURE_SCORE_THRESHOLD` | 0.05 | Per-frame pass threshold in cold burst |
+| `MAJORITY_AFTER_FIRST_THRESHOLD` | 0.40 | Ratio of positive frames required |
 
-Old events in localStorage remain valid; the read adapter safely defaults missing fields.
+To make detection easier: lower `SCORE_ON_THRESHOLD`. To reduce false positives: raise it.
 
 ---
 
-## Run Instructions
+## Fallbacks and Demo Resilience
 
-### Prerequisites
+Every stage has a bypass so judges never get blocked:
 
-- Node.js 18+
-- npm
+| Stage | Fallback |
+|---|---|
+| Culinary Vault | `[DEV] Open Key Scanner` at page bottom; header `Override (Dev Bypass)` → Dashboard |
+| Auth gate | Proceeds directly without alias |
+| Vision scanner | `[DEV] Quick Override` under title; `[DEV] Override Vision Scanner` below CTA |
+| Puzzle | `[DEV] Override Puzzle` below submit |
+| All three trials | `[DEV] Override Trial` in TrialShell footer |
+| Intel decode | `Show Hint` + `Override Decode` in CipherCard |
+| Vault NDA | Closeable after typing closing line |
+| Gemini API down | Hardcoded fallback riddle |
+| Background image missing | `onError` hides image, gradient base remains |
 
-### 1) Install
+---
 
-```bash
-npm install
-```
+## File Structure
 
-### 2) Environment
-
-Create `.env.local` with at least:
-
-```env
-GEMINI_API_KEY=your_key_here
-```
-
-### 3) Start app
-
-```bash
-npm run dev
-```
-
-App runs on `http://localhost:3001`.
-
-### 4) Optional helper server
-
-```bash
-npx tsx server.ts
-```
-
-### 5) Validate
-
-```bash
-npm run lint
-npm run build
+```text
+src/
+  components/
+    initiation/
+      AngelBearingTrial.tsx     — compass bearing puzzle (Trial II)
+      ChamberiSignalTrial.tsx   — signal sequence puzzle (Trial III)
+      KioAlignmentTrial.tsx     — cant-axis alignment puzzle (Trial I)
+      TrialShell.tsx            — shared trial wrapper
+    AuctionCard.tsx
+    CipherCard.tsx
+    HackerConsoleOverlay.tsx
+    RecipeCard.tsx
+    RecipeDetail.tsx
+    VaultDetail.tsx             — per-item detail: bidding, chat, decryption key
+    VaultItemCard.tsx           — auction lot card with live price drift
+    VaultNDAModal.tsx           — NDA/Vow modal on first Vault entry
+  config/
+    constants.ts
+  logic/
+    cipher.ts                   — emoji encoding/decoding pipeline
+  pages/
+    AdminPanel.tsx
+    AlchemyPage.tsx             — Culinary Vault with hidden ritual path
+    ArcadiaDashboard.tsx        — Intel + Vault dashboard
+    InitiationPage.tsx          — full initiation state machine + VisionScanner
+  services/
+    audio.ts
+    gemini.ts
+    mockDB.ts                   — localStorage: members, intel events, seeded state
+    vaultDB.ts                  — localStorage: vault lots, bids, timers, chat
+  types/
+    index.ts
+  App.tsx
+  index.css                     — custom keyframes: pass-flash, needle-wobble, seal-countdown
+  main.tsx
+public/
+  assets/
+    trials/
+      angel-caido.jpg
+      chamberi-platform.jpg
+      kio-towers.jpg
+      retiro-map.jpg
+server.ts
+README.md
 ```
 
 ---
@@ -323,95 +304,34 @@ npm run build             # Production build
 npm run preview           # Preview built app
 npm run lint              # Type-check (tsc --noEmit)
 npm run clean             # Remove dist
-npm run ml:deps           # Install python deps for training pipeline
-npm run ml:train:key      # Train local key classifier
-npm run ml:train:key:docker # Dockerized training path
 ```
-
----
-
-## File Structure
-
-```text
-src/
-  components/
-    initiation/
-      AngelBearingTrial.tsx   — compass bearing puzzle (Trial II)
-      ChamberiSignalTrial.tsx — signal sequence puzzle (Trial III)
-      KioAlignmentTrial.tsx   — cant-axis alignment puzzle (Trial I)
-      TrialShell.tsx          — shared trial wrapper (background, shell, override)
-    AuctionCard.tsx
-    CipherCard.tsx
-    HackerConsoleOverlay.tsx
-    RecipeCard.tsx
-    RecipeDetail.tsx
-  config/
-    constants.ts
-  logic/
-    cipher.ts
-  pages/
-    AdminPanel.tsx
-    AlchemyPage.tsx
-    ArcadiaDashboard.tsx
-    InitiationPage.tsx        — full initiation state machine + VisionScanner
-  services/
-    audio.ts
-    gemini.ts
-    mockDB.ts
-  types/
-    index.ts
-  App.tsx
-  index.css
-  main.tsx
-public/
-  assets/
-    trials/
-      angel-caido.jpg         — Ángel Caído statue, Retiro Park
-      chamberi-platform.jpg   — Chamberí ghost station platform
-      kio-towers.jpg          — Kio inclined towers, Madrid
-      retiro-map.jpg          — Retiro Park mini-map inset
-server.ts
-ml/
-README.md
-```
-
----
-
-## Fallbacks / Demo Resilience
-
-1. **Puzzle fallback:** hardcoded riddle if Gemini fails.
-2. **Vision override:** `[DEV] Override Vision Scanner` bypasses camera detection entirely.
-3. **Trial override:** every trial has a `[DEV] Override` button in the shell.
-4. **Decode fallback:** hint + override button in intel decode.
-5. **Legacy data fallback:** old events remain decodable.
-6. **Seeded data:** preloaded auctions/events/members for continuity.
-7. **Location fallback:** text location still shown even if map is not ideal.
 
 ---
 
 ## What Judges Should Notice
 
-1. **Cohesive reveal design:** Alchemy front to hidden Arcadia, each layer narratively motivated.
-2. **Three distinct puzzle mechanics:** alignment hold, bearing correction, signal sequence — each thematically tied to a real Madrid location.
-3. **Deterministic symbolic system:** repeatable, explainable encoding/decoding.
-4. **Demo reliability:** fast local run, seeded state, graceful fallbacks at every step.
-5. **Technical breadth:** in-browser ML (COCO-SSD + MobileNet EMA), React state machines, Web Audio, AI puzzle generation, symbolic cipher pipeline.
+1. **Layered reveal:** Culinary Vault front → hidden ritual path → gated dashboard. Each layer is narratively motivated.
+2. **Three distinct Madrid-themed puzzles:** alignment hold, bearing correction, signal sequence — all with real location backgrounds.
+3. **In-browser ML:** no server needed for key detection; COCO-SSD + MobileNet EMA + hysteresis state machine.
+4. **Live auction vault:** 20-item rotating lore pool with real-time price drift, bidding, and back-channel chat — all client-side.
+5. **Deterministic symbolic cipher:** repeatable, explainable emoji encoding with clue-based decode.
+6. **Demo reliability:** override buttons at every stage, seeded state, graceful fallbacks throughout.
 
 ---
 
-## 5-Minute Pitch Guidance
+## 5-Minute Pitch Guide
 
-- Minute 1: Vision + reveal (Alchemy → hidden path)
-- Minute 2: Initiation rite (camera detection, riddle, then trials)
-- Minute 3: Trial highlights — Kio alignment, Ángel bearing, Chamberí signal
-- Minute 4: Global Intel post + emoji cipher + clue-based decode
-- Minute 5: Vault/comms + architecture/fallback reliability
+- **0:00–1:00** — Open Alchemy, find the Obsidian path, trigger Hacker Console
+- **1:00–2:00** — Initiation: camera key detection, riddle
+- **2:00–3:30** — Three trials: Kio alignment, Ángel bearing, Chamberí signal
+- **3:30–4:15** — Global Intel: post message, show emoji cipher, decode with clue
+- **4:15–5:00** — The Vault: NDA modal, live lots, bidding, back-channel chat; close with architecture overview
 
-Q&A emphasis:
-- EMA smoothing and hysteresis prevent false positives in the vision scanner
-- Three-stage trial design ensures the reveal feels earned even in a 60-second demo
-- Deterministic cipher over fragile AI where reliability matters
-- All fallback paths protect live demos at every stage
+Q&A talking points:
+- EMA + hysteresis prevents single-frame false positives in vision detection; fast-pass when already locked
+- All state is localStorage: no backend, no deploy dependencies, no API rate limits for vault/auction
+- Deterministic cipher over fragile AI where live reliability matters
+- Every override is one click away
 
 ---
 
