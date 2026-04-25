@@ -193,7 +193,7 @@ export const clearAuctions = () => {
 
 export const getEvents = (): EventMetadata[] => {
     const saved = localStorage.getItem('arcadia_events');
-    return saved ? JSON.parse(saved) : [{
+    const fallbackEvents: EventMetadata[] = [{
         id: "ev_1",
         originalText: "The password for the vial is secret meet at the lake",
         cipherText: "▪️ 🔑 ▪️ ▪️ 🧪 ▪️ 🌑 🜁 ▪️ ▪️ 🌊",
@@ -202,6 +202,39 @@ export const getEvents = (): EventMetadata[] => {
         longitude: -0.1656,
         timestamp: Date.now() - 3600000
     }];
+
+    const rawEvents = saved ? JSON.parse(saved) : fallbackEvents;
+    if (!Array.isArray(rawEvents)) {
+        return fallbackEvents;
+    }
+
+    // Backward-compatible read adapter for legacy records.
+    // We do not mutate localStorage data here.
+    return rawEvents
+        .filter((event): event is Partial<EventMetadata> & { id: string; originalText: string; cipherText: string; timestamp: number } => {
+            return Boolean(
+                event
+                && typeof event.id === 'string'
+                && typeof event.originalText === 'string'
+                && typeof event.cipherText === 'string'
+                && typeof event.timestamp === 'number'
+            );
+        })
+        .map((event) => ({
+            id: event.id,
+            originalText: event.originalText,
+            cipherText: event.cipherText,
+            locationName: typeof event.locationName === 'string' ? event.locationName : 'Coordinates Obscured',
+            latitude: typeof event.latitude === 'number' ? event.latitude : 0,
+            longitude: typeof event.longitude === 'number' ? event.longitude : 0,
+            timestamp: event.timestamp,
+            authorId: typeof event.authorId === 'string' ? event.authorId : undefined,
+            authorName: typeof event.authorName === 'string' ? event.authorName : undefined,
+            clueType: event.clueType,
+            cluePrompt: typeof event.cluePrompt === 'string' ? event.cluePrompt : undefined,
+            expectedAnswer: typeof event.expectedAnswer === 'string' ? event.expectedAnswer : undefined,
+            clueMeta: event.clueMeta,
+        }));
 };
 
 export const saveEvent = (event: EventMetadata) => {

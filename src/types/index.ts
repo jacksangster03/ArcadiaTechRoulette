@@ -46,6 +46,12 @@ export interface EventMetadata {
   timestamp: number;
   authorId?: string;
   authorName?: string;
+  clueType?: 'last_emoji' | 'nth_emoji' | 'emoji_count';
+  cluePrompt?: string;
+  expectedAnswer?: string;
+  clueMeta?: {
+    index?: number;
+  };
 }
 
 export interface MemberIdentity {

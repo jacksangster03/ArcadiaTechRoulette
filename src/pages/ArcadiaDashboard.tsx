@@ -5,7 +5,7 @@ import { AuctionLot, EventMetadata, MemberIdentity, DirectMessage } from '../typ
 import { getAuctions, getEvents, generateIdentity, getMembers, getMessages, saveMessage, saveEvent, saveMember, removeMember, deleteMessage } from '../services/mockDB';
 import { AuctionCard } from '../components/AuctionCard';
 import { CipherCard } from '../components/CipherCard';
-import { encodeForumCipher, extractLocation } from '../logic/cipher';
+import { buildEmojiClue, chooseClueTypeForEventId, encodeForumCipher, extractLocation } from '../logic/cipher';
 import { ai } from '../services/gemini';
 
 function MatrixRain() {
@@ -192,16 +192,24 @@ export function ArcadiaDashboard({ onAdminToggle, onLogout }: { onAdminToggle: (
   const handlePostIntel = () => {
     if (!intelText.trim()) return;
     const { loc, lat, lng } = extractLocation(intelText);
+    const eventId = "ev_" + Date.now().toString().slice(-4);
+    const cipherText = encodeForumCipher(intelText);
+    const clueType = chooseClueTypeForEventId(eventId);
+    const clue = buildEmojiClue(cipherText, clueType);
     const newEvent: EventMetadata = {
-      id: "ev_" + Date.now().toString().slice(-4),
+      id: eventId,
       originalText: intelText,
-      cipherText: encodeForumCipher(intelText),
+      cipherText,
       locationName: loc,
       latitude: lat,
       longitude: lng,
       timestamp: Date.now(),
       authorId: isAnonymous ? undefined : identity?.id,
-      authorName: isAnonymous ? undefined : identity?.codename
+      authorName: isAnonymous ? undefined : identity?.codename,
+      clueType: clue.clueType,
+      cluePrompt: clue.cluePrompt,
+      expectedAnswer: clue.expectedAnswer,
+      clueMeta: clue.clueMeta,
     };
     saveEvent(newEvent);
     setEvents(getEvents());

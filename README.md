@@ -2,93 +2,170 @@
 
 A hidden operating system for secret societies: access by rite, communication by symbol.
 
-Arcadia is a demo-first ritual web experience. Users enter through a public-facing “Alchemy” vault, discover hidden access paths, complete initiation, and unlock a symbolic coordination layer.
+Arcadia is a demo-first web experience built for a hackathon setting. It is intentionally narrow, ritualized, and reliable: one coherent happy path that can be run repeatedly in front of judges.
 
-## Product Summary
+## Submission Snapshot
 
-Arcadia is designed as a narrow, high-impact demo system with a coherent end-to-end flow:
+- **Repo:** [joeljin20/Arcadia](https://github.com/joeljin20/Arcadia)
+- **Run locally (single command):**
+  ```bash
+  npm install && npm run dev
+  ```
+- **Dev URL:** `http://localhost:3001`
+- **Optional backend helper:**
+  ```bash
+  npx tsx server.ts
+  ```
 
-1. Alchemy landing and archive exploration.
-2. Secret unlock discovery and ritual decryption path.
-3. Initiation with artefact verification + puzzle gate.
-4. Member dashboard and encoded message flow.
-5. Admin event/message creation.
-6. Decode and reveal behavior with resilient fallbacks.
+## What This Project Is
 
-The implementation prioritizes stability, performance, and demo reliability over feature sprawl.
+Arcadia is a two-layer product:
 
-## Demo Story
+1. **Public front** (`Alchemy / Culinary Vault`): elegant recipe archive UI with hidden ritual mechanics.
+2. **Hidden system** (`Arcadia`): initiation gate + member dashboard + symbolic intel decode.
 
-Recommended demo run order:
+The design goal is to make the reveal feel magical while keeping implementation deterministic and demo-safe.
 
-1. Open **Alchemy / Culinary Vault**.
-2. Click **Alchemy** to reveal search and enter the hidden phrase or follow the Obsidian clue path.
-3. Open **The Obsidian Cipher Torte** detail view.
-4. Trigger **Initiate Decryption** and complete the hacker console sequence.
-5. Return to the vault with unlocked state active.
-6. Trigger Arcadia access and run initiation.
-7. Pass artefact check (camera/upload path + retry fallback).
-8. Solve puzzle (Gemini-generated with hardcoded backup).
-9. Enter dashboard, review encoded content.
-10. Switch to admin panel, create encoded event/message.
-11. Return to member flow and decode.
+## Core Demo Flow (Exact)
 
-## Architecture Overview
+1. Open **Alchemy**.
+2. Discover/open **The Obsidian Cipher Torte** path.
+3. Trigger **Hacker Console** and complete number sequence challenge.
+4. Reach unlocked vault state.
+5. Enter **Initiation Rite**:
+   - present catalyst to camera,
+   - solve puzzle.
+6. Enter **Arcadia Dashboard**.
+7. In **Global Intel**, submit a message and show emoji cipher output.
+8. Decode intel using clue-driven answer.
+9. Reveal original text + location map.
+10. Show **Vault** and **Secure Comms** tabs for system completeness.
+
+---
+
+## Product Architecture
 
 ### Frontend
 
-- React + TypeScript + Vite
+- React 19 + TypeScript + Vite
+- TailwindCSS 4 + custom CSS ritual effects
 - Motion animations via `motion/react`
-- TailwindCSS 4 styling + custom ritual effects in `src/index.css`
+- Web Audio API micro-sound cues
+- TensorFlow.js in-browser scanning for initiation
 
-State flow is managed in `src/App.tsx`:
+### Data
 
-- `ALCHEMY`
-- `INITIATION`
-- `DASHBOARD`
-- `ADMIN`
-- (`HACKER` type exists for flow compatibility; hacker console currently used as overlay)
+- `localStorage` via `src/services/mockDB.ts`
+- Seeded data for reliability in demos
+- Backward-compatible event schema upgrades
 
-### Pages and Components
+### Optional Backend
 
+- `server.ts` (Express helper)
+- Not required for the main app flow
+
+---
+
+## Exactly How Each Major Screen Works
+
+## 1) Alchemy (Culinary Vault)
+
+Implemented in:
 - `src/pages/AlchemyPage.tsx`
-  - Vault layout engine
-  - Secret/unlock flow orchestration
-  - Featured + card slot composition and reshuffle
+- `src/components/RecipeCard.tsx`
+- `src/components/RecipeDetail.tsx`
 - `src/components/HackerConsoleOverlay.tsx`
-  - Number-sequence validation and breach flow
+
+What it does:
+- Renders responsive slot-based archive composition with one featured hero card + small cards.
+- Supports filtering and search.
+- Obsidian path drives unlock journey.
+- Hacker console validates ritual number sequence.
+
+Notes:
+- Layout uses deterministic slot math and periodic reshuffle.
+- Visual effects (beam ring, CRT/glow, hover depth, parallax) are presentational only.
+
+## 2) Initiation
+
+Implemented in:
 - `src/pages/InitiationPage.tsx`
-  - Artefact check + puzzle challenge
+
+What it does:
+- Camera-based catalyst verification (browser ML path).
+- Failure path and retry handling.
+- Puzzle stage (Gemini-generated when available, fallback riddle if not).
+
+Reliability decisions:
+- Fast startup model strategy for demo pace.
+- Fallback puzzle prevents dead-end.
+
+## 3) Arcadia Dashboard
+
+Implemented in:
 - `src/pages/ArcadiaDashboard.tsx`
-  - Member-facing ritual dashboard
-- `src/pages/AdminPanel.tsx`
-  - Admin creation flow
-- `src/components/RecipeCard.tsx`, `src/components/RecipeDetail.tsx`
-  - Archive cards, featured treatment, detail and decryption CTA
+- `src/components/CipherCard.tsx`
+- `src/components/AuctionCard.tsx`
 
-### Data Layer
+Tabs:
+- **Global Intel:** create encoded intel + decode challenge.
+- **The Vault:** encrypted lot cards.
+- **Secure Comms:** local shadow-node messaging simulation.
 
-- Current runtime persistence: `localStorage` abstraction via `src/services/mockDB.ts`
-- Seeded default entities included for demo continuity
+---
 
-### Optional Backend Helper
+## Global Intel Cipher System (Detailed)
 
-- `server.ts` (Express utility service)
-- Provides `/api/health` only; initiation artefact verification runs in-browser with TensorFlow.js
+Implemented in:
+- `src/logic/cipher.ts`
+- `src/components/CipherCard.tsx`
+- `src/pages/ArcadiaDashboard.tsx`
 
-## Technologies Used
+### Encoding pipeline
 
-- React 19
-- TypeScript
-- Vite
-- TailwindCSS 4
-- `motion/react`
-- Lucide React icons
-- Google Gemini (`@google/genai`)
-- TensorFlow.js (`@tensorflow/tfjs`, `@tensorflow-models/coco-ssd`, `@tensorflow-models/mobilenet`)
-- Express + CORS (optional local API helper)
+1. Admin/member submits text (typed or speech transcript).
+2. Text is tokenized + normalized.
+3. Tokens are encoded into symbols:
+   - known keywords use curated map (`lake -> 🌊`, `meeting -> 🜁`, etc.)
+   - stopwords map to neutral marker (`▪️`)
+   - unknown words map to deterministic fallback emoji via hashing (so output is varied, not repeated `💠`)
 
-## Setup Instructions
+### Decode challenge pipeline
+
+For each new intel event, the app stores clue metadata:
+- `clueType`: one of `last_emoji`, `nth_emoji`, `emoji_count`
+- `cluePrompt`
+- `expectedAnswer`
+- optional `clueMeta`
+
+Clue type selection is deterministic by event ID, weighted for demo reliability:
+- ~80% `last_emoji`
+- ~10% `nth_emoji`
+- ~10% `emoji_count`
+
+### Current answer mode (UX)
+
+Clues are solved via **typed text** (easy for demos), not emoji keyboard input.
+- For glyph-based clues, user types the **word represented by the glyph**.
+- Includes `Show Hint` and `Override Decode` actions so judges never get blocked.
+- Legacy records (older schema) still decode via key fallback.
+
+---
+
+## Type/Data Model Updates
+
+`EventMetadata` now supports clue metadata (all optional for backward compatibility):
+
+- `clueType?: 'last_emoji' | 'nth_emoji' | 'emoji_count'`
+- `cluePrompt?: string`
+- `expectedAnswer?: string`
+- `clueMeta?: { index?: number }`
+
+Old events in localStorage remain valid; read adapter safely defaults missing fields.
+
+---
+
+## Run Instructions (Detailed)
 
 ### Prerequisites
 
@@ -103,140 +180,52 @@ npm install
 
 ### 2) Environment
 
-Create `.env.local` from `.env.example`.
-
-Minimum key:
+Create `.env.local` with at least:
 
 ```env
-GEMINI_API_KEY="YOUR_GEMINI_API_KEY"
+GEMINI_API_KEY=your_key_here
 ```
 
-Optional backend helper keys:
-
-```env
-BACKEND_PORT=3001
-```
-
-### 3) Run frontend
+### 3) Start app
 
 ```bash
 npm run dev
 ```
 
-Frontend runs on `http://localhost:3000`.
+App runs on:
+- `http://localhost:3001`
 
-### 4) Run optional backend helper (second terminal)
+### 4) Optional helper server
 
 ```bash
 npx tsx server.ts
 ```
 
-Backend runs on `http://localhost:3001`.
-
-### 5) Build and type-check
+### 5) Validate
 
 ```bash
 npm run lint
 npm run build
 ```
 
-### 6) Train custom key model (recommended for production reliability)
+---
+
+## Scripts
 
 ```bash
-npm run ml:deps
-npm run ml:train:key
+npm run dev               # Vite dev server (port 3001)
+npm run build             # Production build
+npm run preview           # Preview built app
+npm run lint              # Type-check (tsc --noEmit)
+npm run clean             # Remove dist
+npm run ml:deps           # Install python deps for training pipeline
+npm run ml:train:key      # Train local key classifier
+npm run ml:train:key:docker # Dockerized training path
 ```
 
-If your local Python is not 3.11-compatible for TensorFlow conversion, use Docker:
+---
 
-```bash
-npm run ml:train:key:docker
-```
-
-Dataset format:
-
-```text
-ml/datasets/
-  key/
-  not_key/
-```
-
-Full training guide: [`ml/README.md`](ml/README.md)
-
-## API Usage Overview
-
-### Gemini
-
-Used for:
-
-- initiation puzzle generation
-- thematic AI content in ritual flow
-
-Cost control:
-
-- one puzzle per initiation attempt
-- backup hardcoded puzzle when generation fails
-
-### Vision
-
-Used for:
-
-- artefact verification in initiation
-
-Paths:
-
-- primary: in-browser TensorFlow.js model-assisted flow (`coco-ssd` + `mobilenet`)
-- production path: custom trained TF model auto-loaded from `public/models/key_classifier/model.json`
-- backend helper not required for vision verification
-
-Fallback:
-
-- retry path + alternative input path when verification fails
-
-### Speech / Voice
-
-Used as optional enhancement in admin flow where enabled.
-
-Fallback:
-
-- typed input is always available
-
-### Maps / Location Reveal
-
-Decode flows are designed with text-first fallback if map loading is unavailable.
-
-### Storage
-
-Current default: local storage mock service (`mockDB`) with seeded data for continuity.
-
-## Team Module Ownership
-
-| Module | Ownership | Scope |
-|---|---|---|
-| Entry / Alchemy Experience | Builder 1 | Landing, search reveal, unlock gating, transitions |
-| Initiation System | Builder 2 | Artefact check, puzzle flow, pass/fail states |
-| Admin Ritual Console | Builder 3 | Event creation, text-first + optional voice |
-| Cipher + Storage + Reveal | Builder 4 | Deterministic encoding/decoding, persistence, reveal behavior |
-| Integration + Demo Polish (optional) | Builder 5 / shared | QA, resilience, README, demo script |
-
-## Demo Resilience / Backup Paths
-
-1. **Predefined artefact target**
-   - Demo with one stable recognizable object.
-2. **Backup puzzle**
-   - If Gemini fails, fallback puzzle is used.
-3. **Typed admin fallback**
-   - Voice is optional; text path remains primary.
-4. **Location fallback**
-   - If map/reveal service fails, show location in text.
-5. **Seeded data**
-   - Pre-seeded archive/event data ensures flow continuity.
-
-## Current Scope Notes
-
-In-scope behavior is focused on a complete ritual happy path and polished transitions. Out-of-scope platform features (full chat/forum systems, advanced cryptography, multiplayer orchestration, complex permissions engines) are intentionally constrained to keep demo reliability high.
-
-## Project Structure
+## File Structure (Current)
 
 ```text
 src/
@@ -266,30 +255,45 @@ src/
   main.tsx
 server.ts
 ml/
-  Dockerfile
-  README.md
-  train_key_classifier.py
-  train_key_classifier_docker.sh
 README.md
 ```
 
-## Scripts
+---
 
-```bash
-npm run dev      # start Vite dev server
-npm run build    # production build
-npm run preview  # preview production build
-npm run lint     # TypeScript type-check (no emit)
-npm run clean    # remove dist
-```
+## Fallbacks / Demo Resilience
 
-## Git Workflow (Recommended)
+1. **Puzzle fallback:** hardcoded riddle if Gemini fails.
+2. **Decode fallback:** hint + override button in intel decode.
+3. **Legacy data fallback:** old events remain decodable.
+4. **Seeded data:** preloaded auctions/events/members for continuity.
+5. **Location fallback:** text location still shown even if map is not ideal.
 
-- Keep `main` demo-stable.
-- Use feature branches for major changes.
-- Keep PRs small and demo-visible.
-- Rehearse full happy path before merges.
+---
+
+## What Judges Should Notice
+
+1. **Cohesive reveal design:** from Alchemy front to hidden Arcadia behavior.
+2. **Deterministic symbolic system:** repeatable, explainable encoding/decoding.
+3. **Demo reliability:** fast local run, seeded state, graceful fallbacks.
+4. **Technical breadth:** frontend interaction design, browser ML initiation, AI puzzle integration, symbolic logic pipeline.
+
+---
+
+## 5-Minute Pitch Guidance
+
+- Minute 1: Vision + reveal (Alchemy -> hidden path)
+- Minute 2: Initiation rite (camera + puzzle)
+- Minute 3: Global Intel post + emoji cipher
+- Minute 4: Clue-based decode + location reveal
+- Minute 5: Vault/comms + architecture/fallback reliability
+
+Q&A emphasis:
+- deterministic over fragile AI where reliability matters,
+- why clue metadata is backward-compatible,
+- how fallback paths protect live demos.
+
+---
 
 ## License
 
-Hackathon/demo prototype. Add a formal license if this moves beyond event scope.
+Hackathon prototype. Add formal license before production use.

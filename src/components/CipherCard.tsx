@@ -1,14 +1,94 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Lock, Unlock, MapPin } from 'lucide-react';
 import { EventMetadata } from '../types';
+import { emojiWordForSymbol, normalizeClueAnswer } from '../logic/cipher';
 
 export function CipherCard({ event }: { event: EventMetadata }) {
   const [decoded, setDecoded] = useState(false);
   const [attemptingDecode, setAttemptingDecode] = useState(false);
   const [passcode, setPasscode] = useState('');
   const [error, setError] = useState(false);
+  const [showHint, setShowHint] = useState(false);
   const [displayedText, setDisplayedText] = useState('');
+  const usingClueProtocol = Boolean(event.expectedAnswer && event.cluePrompt);
+
+  const promptTitle = useMemo(() => {
+    if (!usingClueProtocol) {
+      return 'Enter Decryption Key';
+    }
+    return 'Resolve Cipher Clue';
+  }, [usingClueProtocol]);
+
+  const promptBody = useMemo(() => {
+    if (!usingClueProtocol) {
+      return 'Enter decryption key.';
+    }
+    if (event.clueType === 'last_emoji') {
+      return 'Type the word represented by the final glyph.';
+    }
+    if (event.clueType === 'nth_emoji') {
+      const index = event.clueMeta?.index ?? 3;
+      return `Type the word represented by glyph ${index}.`;
+    }
+    if (event.clueType === 'emoji_count') {
+      return 'Type the total number of glyphs.';
+    }
+    return event.cluePrompt ?? 'Enter the required clue answer.';
+  }, [event.cluePrompt, usingClueProtocol]);
+
+  const placeholder = useMemo(() => {
+    if (!usingClueProtocol) {
+      return 'KEY...';
+    }
+    switch (event.clueType) {
+      case 'emoji_count':
+        return 'e.g. 7';
+      case 'nth_emoji':
+        return 'e.g. meeting';
+      case 'last_emoji':
+      default:
+        return 'e.g. lake';
+    }
+  }, [event.clueType, usingClueProtocol]);
+
+  const acceptedAnswers = useMemo(() => {
+    if (!usingClueProtocol) {
+      return [normalizeClueAnswer('secret')];
+    }
+
+    const expectedRaw = event.expectedAnswer ?? '';
+    const expected = normalizeClueAnswer(expectedRaw);
+    const mappedFromEmoji = normalizeClueAnswer(emojiWordForSymbol(expectedRaw) ?? '');
+    if (event.clueType === 'last_emoji') {
+      return [expected, mappedFromEmoji].filter(Boolean);
+    }
+    if (event.clueType === 'nth_emoji') {
+      return [expected, mappedFromEmoji].filter(Boolean);
+    }
+    if (event.clueType === 'emoji_count') {
+      return [expected].filter(Boolean);
+    }
+    return [expected].filter(Boolean);
+  }, [event.clueMeta?.index, event.clueType, event.expectedAnswer, usingClueProtocol]);
+
+  const hintText = useMemo(() => {
+    if (!usingClueProtocol) {
+      return 'Legacy intel uses the key: secret';
+    }
+    if (event.clueType === 'last_emoji') {
+      const expected = normalizeClueAnswer(event.expectedAnswer ?? '');
+      return expected ? `Hint: starts with "${expected.charAt(0)}".` : 'Hint: use the final glyph word.';
+    }
+    if (event.clueType === 'nth_emoji') {
+      const expected = normalizeClueAnswer(event.expectedAnswer ?? '');
+      return expected ? `Hint: starts with "${expected.charAt(0)}".` : 'Hint: use the glyph word at that position.';
+    }
+    if (event.clueType === 'emoji_count') {
+      return 'Hint: count each emoji token separated by spaces.';
+    }
+    return 'Hint: use a short, lowercase response.';
+  }, [event.clueMeta?.index, event.clueType, usingClueProtocol]);
 
   useEffect(() => {
     if (!decoded) { setDisplayedText(''); return; }
@@ -28,17 +108,21 @@ export function CipherCard({ event }: { event: EventMetadata }) {
       setAttemptingDecode(false);
       setPasscode('');
       setError(false);
+      setShowHint(false);
     } else {
       setAttemptingDecode(true);
+      setShowHint(false);
     }
   };
 
   const submitPasscode = (e: React.FormEvent) => {
     e.preventDefault();
-    if (passcode.toLowerCase() === 'secret') {
+    const normalizedInput = normalizeClueAnswer(passcode);
+    if (acceptedAnswers.includes(normalizedInput)) {
       setDecoded(true);
       setAttemptingDecode(false);
       setError(false);
+      setShowHint(false);
     } else {
       setError(true);
       setPasscode('');
@@ -103,21 +187,49 @@ export function CipherCard({ event }: { event: EventMetadata }) {
           {attemptingDecode && !decoded && (
              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden mb-8">
                <form onSubmit={submitPasscode} className="bg-zinc-950 p-6 md:p-8 border border-zinc-900 outline outline-1 outline-transparent focus-within:outline-emerald-900/30 transition-all shadow-inner">
-                 <p className="text-[10px] uppercase font-bold text-zinc-500 tracking-[0.2em] mb-6 block">Enter Decryption Key</p>
+                 <div className="mb-6 space-y-2">
+                   <p className="text-[10px] uppercase font-bold text-zinc-500 tracking-[0.2em] block">{promptTitle}</p>
+                   <p className="text-xs text-emerald-300/75 font-mono tracking-wide">{promptBody}</p>
+                 </div>
                  <div className="flex flex-col md:flex-row gap-4">
                    <input
-                     type="password"
+                     type={usingClueProtocol ? "text" : "password"}
                      value={passcode}
                      onChange={(e) => setPasscode(e.target.value)}
                      className={`flex-1 w-full bg-black border ${error ? 'border-red-500 text-red-400' : 'border-zinc-800 focus:border-emerald-900/50 focus:text-emerald-400 text-zinc-200'} px-5 py-4 outline-none font-mono tracking-[0.2em] uppercase text-sm transition-colors`}
-                     placeholder="KEY..."
+                     placeholder={placeholder}
                      autoFocus
                    />
                    <button type="submit" className="shrink-0 px-8 py-4 bg-emerald-950/40 text-emerald-500 border border-emerald-900/50 text-[10px] font-mono font-bold uppercase tracking-[0.2em] hover:bg-emerald-900/60 hover:text-emerald-300 transition-all shadow-lg">
                      Verify
                    </button>
                  </div>
-                 {error && <p className="text-[10px] text-red-500 mt-4 font-mono uppercase tracking-[0.2em]">Invalid cryptographic sequence</p>}
+                 <div className="mt-4 flex flex-wrap gap-3">
+                   <button
+                     type="button"
+                     onClick={() => setShowHint((prev) => !prev)}
+                     className="px-4 py-2 text-[10px] font-mono uppercase tracking-[0.2em] border border-zinc-700 text-zinc-400 hover:text-emerald-300 hover:border-emerald-900/50 transition-colors"
+                   >
+                     {showHint ? 'Hide Hint' : 'Show Hint'}
+                   </button>
+                   <button
+                     type="button"
+                     onClick={() => {
+                       setDecoded(true);
+                       setAttemptingDecode(false);
+                       setError(false);
+                       setShowHint(false);
+                       setPasscode('');
+                     }}
+                     className="px-4 py-2 text-[10px] font-mono uppercase tracking-[0.2em] border border-emerald-900/40 text-emerald-500 hover:text-emerald-300 hover:bg-emerald-950/30 transition-colors"
+                   >
+                     Override Decode
+                   </button>
+                 </div>
+                 {showHint && (
+                   <p className="text-[10px] text-emerald-300/75 mt-4 font-mono uppercase tracking-[0.15em]">{hintText}</p>
+                 )}
+                 {error && <p className="text-[10px] text-red-500 mt-4 font-mono uppercase tracking-[0.2em]">Incorrect clue response</p>}
                </form>
              </motion.div>
           )}
