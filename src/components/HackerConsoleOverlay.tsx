@@ -576,7 +576,7 @@ export function HackerConsoleOverlay({ isOpen, onClose, onBreach }: HackerConsol
                     initial={{ opacity: 0, scale: 0.82 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.55, duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
-                    className="breach-glow-text font-serif italic text-center px-6 terminal-text"
+                    className="breach-glow-text font-mono text-center px-6 terminal-text"
                     style={{ fontSize: 'clamp(2.4rem, 5.5vw, 4.8rem)', letterSpacing: '0.14em' }}
                   >
                     ET IN ARCADIA EGO
