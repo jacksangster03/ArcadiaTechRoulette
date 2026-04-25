@@ -243,6 +243,8 @@ Two modes: `Return to Alias` (verifies device-locked alias against mockDB) and `
 
 Live in-browser ML scanner running COCO-SSD + MobileNet v2 at ~5 fps. Each frame produces a composite score from four signals:
 
+We initially prototyped camera verification with Google Cloud Vision API, but shifted to on-device TensorFlow.js for the final build to avoid extra cloud credential/key management and quota friction while operating under Gemini API key constraints during the hackathon.
+
 | Signal | Source | Max contribution |
 |---|---|---|
 | COCO class hit | scissors, knife, fork, spoon, remote, cell phone, pen, toothbrush | 0.55 + 0.14 centre bonus |
