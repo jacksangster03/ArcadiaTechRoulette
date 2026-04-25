@@ -112,7 +112,7 @@ export function TrialShell({
 
         <button
           onClick={onOverride}
-          className="text-emerald-500/25 hover:text-emerald-400 font-mono uppercase tracking-[0.2em] text-[10px] transition-colors border border-transparent hover:border-emerald-500/20 px-6 py-2 rounded-full mt-2"
+          className="text-emerald-500/30 hover:text-emerald-400 font-mono uppercase tracking-[0.18em] text-[8px] transition-colors border border-transparent hover:border-emerald-500/20 px-3 py-0.5 rounded-full mt-1"
         >
           [DEV] Override Trial
         </button>

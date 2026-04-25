@@ -32,10 +32,12 @@ const VISION_CONFIG = {
   EMA_ALPHA:                  0.65,  // EMA weight for the newest frame (more reactive)
   MIN_BBOX_AREA:              300,   // ignore COCO detections smaller than this (px²)
   CENTER_WEIGHT:              0.14,  // bonus for object within 38% of frame centre
-  BURST_FRAMES_LOCKED:        2,     // capture-burst length when already live-locked
-  BURST_FRAMES_COLD:          3,     // capture-burst length when not locked
-  BURST_FRAME_GAP_MS:         250,   // gap between burst frames
-  CAPTURE_SCORE_THRESHOLD:    0.12,  // single-frame score required in capture burst
+  BURST_FRAMES_LOCKED:        5,     // capture window when already live-locked
+  BURST_FRAMES_COLD:          7,     // capture window when not locked
+  BURST_FRAME_GAP_MS:         220,   // gap between burst frames
+  CAPTURE_SCORE_THRESHOLD:    0.11,  // frame score treated as "positive"
+  MAJORITY_AFTER_FIRST_THRESHOLD: 0.56, // after first positive, majority must stay positive
+  MIN_POSITIVE_FRAMES_AFTER_FIRST: 3,   // avoid single-frame lucky passes
 } as const;
 
 // MobileNet ImageNet labels closest to "key" — kept broad because keys produce
@@ -595,7 +597,8 @@ function VisionScanner({ onClose, onSuccess, onFailure }: { onClose: () => void;
     setScanProgress(0);
     setError(null);
 
-    // Burst length depends on whether we already have a live lock
+    // Burst length depends on whether we already have a live lock.
+    // Pass logic uses majority-after-first-positive to tolerate brief flicker.
     const FRAMES    = isLockedRef.current ? VISION_CONFIG.BURST_FRAMES_LOCKED : VISION_CONFIG.BURST_FRAMES_COLD;
     const FRAME_GAP = VISION_CONFIG.BURST_FRAME_GAP_MS;
     // Lower threshold if already locked (live EMA was already confident)
@@ -613,9 +616,10 @@ function VisionScanner({ onClose, onSuccess, onFailure }: { onClose: () => void;
     }, totalMs / 20);
 
     try {
-      let detected = false;
+      const scores: number[] = [];
+      let firstPositiveIndex = -1;
 
-      for (let i = 0; i < FRAMES && !detected; i++) {
+      for (let i = 0; i < FRAMES; i++) {
         if (i > 0) await new Promise<void>(r => setTimeout(r, FRAME_GAP));
         const video = videoRef.current!;
         if (video.readyState < 4) continue;
@@ -626,7 +630,20 @@ function VisionScanner({ onClose, onSuccess, onFailure }: { onClose: () => void;
           cocoRef.current!.detect(video),
         ]);
         const score = computeFrameScore(mnFull, mnCrop, cocoPreds, video.videoWidth, video.videoHeight);
-        if (score >= THRESHOLD) detected = true;
+        scores.push(score);
+        if (score >= THRESHOLD && firstPositiveIndex === -1) {
+          firstPositiveIndex = scores.length - 1;
+        }
+      }
+
+      let detected = false;
+      if (firstPositiveIndex >= 0) {
+        const windowScores = scores.slice(firstPositiveIndex);
+        const positivesAfterFirst = windowScores.filter((s) => s >= THRESHOLD).length;
+        const ratioAfterFirst = positivesAfterFirst / Math.max(windowScores.length, 1);
+        detected =
+          positivesAfterFirst >= VISION_CONFIG.MIN_POSITIVE_FRAMES_AFTER_FIRST &&
+          ratioAfterFirst >= VISION_CONFIG.MAJORITY_AFTER_FIRST_THRESHOLD;
       }
 
       clearInterval(progressRef.current!);
@@ -639,8 +656,19 @@ function VisionScanner({ onClose, onSuccess, onFailure }: { onClose: () => void;
         setScanProgress(0);
         // Restore live state
         setScannerState(isLockedRef.current ? 'CATALYST_LOCKED' : 'READY_AWAITING');
-        if (detected) onSuccess();
-        else onFailure();
+        if (detected) {
+          onSuccess();
+          return;
+        }
+
+        // Saw some catalyst signal but it was unstable: keep user in gate.
+        if (firstPositiveIndex >= 0) {
+          setError('Catalyst signal unstable. Hold steady and retry.');
+          return;
+        }
+
+        // True no-signal path keeps existing fail behavior.
+        onFailure();
       }, 450);
     } catch (e) {
       if (progressRef.current) { clearInterval(progressRef.current); progressRef.current = null; }
@@ -693,6 +721,13 @@ function VisionScanner({ onClose, onSuccess, onFailure }: { onClose: () => void;
             <p className="text-sm text-zinc-400/60 leading-relaxed max-w-xs mx-auto font-light">
               The seal yields to nothing but its counterpart. Present the instrument of passage.
             </p>
+            <button
+              type="button"
+              onClick={onSuccess}
+              className="mx-auto mt-1 inline-flex items-center rounded-full border border-emerald-500/25 px-3 py-1 text-[8px] font-mono uppercase tracking-[0.18em] text-emerald-500/55 hover:text-emerald-400 hover:border-emerald-500/45 transition-colors"
+            >
+              [DEV] Quick Override
+            </button>
           </div>
 
           <div className="relative aspect-video bg-black rounded-3xl overflow-hidden border border-white/5 shadow-inner">
@@ -808,7 +843,7 @@ function VisionScanner({ onClose, onSuccess, onFailure }: { onClose: () => void;
             <span>{ctaLabel}</span>
           </button>
 
-          <button onClick={onSuccess} className="w-full py-3 bg-transparent text-emerald-500/50 hover:text-emerald-400 rounded-full font-bold uppercase tracking-[0.2em] text-[10px] transition-colors border border-transparent hover:border-emerald-500/30">
+          <button onClick={onSuccess} className="mx-auto inline-flex items-center rounded-full border border-emerald-500/20 px-3 py-0.5 bg-transparent text-emerald-500/40 hover:text-emerald-400 font-mono uppercase tracking-[0.18em] text-[8px] transition-colors hover:border-emerald-500/30">
             [DEV] Override Vision Scanner
           </button>
         </div>
@@ -884,7 +919,7 @@ function InitiationPuzzle({ onClose, onSuccess }: { onClose: () => void; onSucce
                 className={`bg-transparent border-b-2 ${error ? 'border-red-500 text-red-500' : 'border-emerald-500/30 text-emerald-100 focus:border-emerald-400'} w-64 text-center py-3 text-2xl font-mono focus:outline-none transition-colors placeholder:text-emerald-900/40`}
               />
               <button type="submit" className="px-8 py-3 mt-4 bg-emerald-900 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-800 rounded-full text-xs font-bold uppercase tracking-widest transition-colors shadow-lg">Submit Truth</button>
-              <button type="button" onClick={onSuccess} className="mt-2 text-emerald-500/50 hover:text-emerald-400 font-bold uppercase tracking-widest text-[10px] transition-colors">
+              <button type="button" onClick={onSuccess} className="mt-2 px-3 py-1 rounded-full border border-emerald-500/20 text-emerald-500/50 hover:text-emerald-400 font-mono uppercase tracking-[0.18em] text-[9px] transition-colors">
                 [DEV] Override Puzzle
               </button>
             </div>
