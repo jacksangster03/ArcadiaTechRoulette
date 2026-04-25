@@ -8,6 +8,8 @@ Arcadia is a demo-first web experience built for the GDG Tech Roulette Hackathon
 - **Repository:** [github.com/jacksangster03/ArcadiaTechRoulette](https://github.com/jacksangster03/ArcadiaTechRoulette)
 - **Video walkthrough (recommended before judging):** [YouTube demo guide](https://www.youtube.com/watch?v=TlUTmd71H00)
 
+**Repository note:** This repo is a fork used for deployment on Vercel and submission packaging. The active live deployment is connected to this fork.
+
 ---
 
 ## Quick Start
@@ -415,22 +417,6 @@ npm run clean             # Remove dist
 4. **Live auction vault:** 20-item rotating lore pool with real-time price drift, bidding, and back-channel chat — all client-side.
 5. **Deterministic symbolic cipher:** repeatable, explainable emoji encoding with clue-based decode.
 6. **Demo reliability:** override buttons at every stage, seeded state, graceful fallbacks throughout.
-
----
-
-## 5-Minute Pitch Guide
-
-- **0:00–1:00** — Open Alchemy, find the Obsidian path, trigger Hacker Console
-- **1:00–2:00** — Initiation: camera key detection, riddle
-- **2:00–3:30** — Three trials: Kio alignment, Ángel bearing, Chamberí signal
-- **3:30–4:15** — Global Intel: post message, show emoji cipher, decode with clue
-- **4:15–5:00** — The Vault: NDA modal, live lots, bidding, back-channel chat; close with architecture overview
-
-Q&A talking points:
-- EMA + hysteresis prevents single-frame false positives in vision detection; fast-pass when already locked
-- All state is localStorage: no backend, no deploy dependencies, no API rate limits for vault/auction
-- Deterministic cipher over fragile AI where live reliability matters
-- Every override is one click away
 
 ---
 
