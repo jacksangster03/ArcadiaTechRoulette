@@ -25,9 +25,9 @@ type ScannerState =
 // Adjust here; no need to touch detection logic below.
 const VISION_CONFIG = {
   FRAME_INTERVAL_MS:          200,   // inference cadence (~5 fps)
-  SCORE_ON_THRESHOLD:         0.14,  // EMA score to count as a "lock frame"
-  SCORE_OFF_THRESHOLD:        0.06,  // hysteresis: LOCKED → AWAITING only below this
-  SCORE_POSSIBLE_THRESHOLD:   0.06,  // shows CATALYST_POSSIBLE (approaching)
+  SCORE_ON_THRESHOLD:         0.07,  // EMA score to count as a "lock frame"
+  SCORE_OFF_THRESHOLD:        0.03,  // hysteresis: LOCKED → AWAITING only below this
+  SCORE_POSSIBLE_THRESHOLD:   0.03,  // shows CATALYST_POSSIBLE (approaching)
   CONSECUTIVE_LOCK_FRAMES:    2,     // how many consecutive lock-frames to enter LOCKED
   EMA_ALPHA:                  0.65,  // EMA weight for the newest frame (more reactive)
   MIN_BBOX_AREA:              300,   // ignore COCO detections smaller than this (px²)
@@ -35,9 +35,9 @@ const VISION_CONFIG = {
   BURST_FRAMES_LOCKED:        5,     // capture window when already live-locked
   BURST_FRAMES_COLD:          7,     // capture window when not locked
   BURST_FRAME_GAP_MS:         220,   // gap between burst frames
-  CAPTURE_SCORE_THRESHOLD:    0.11,  // frame score treated as "positive"
-  MAJORITY_AFTER_FIRST_THRESHOLD: 0.56, // after first positive, majority must stay positive
-  MIN_POSITIVE_FRAMES_AFTER_FIRST: 3,   // avoid single-frame lucky passes
+  CAPTURE_SCORE_THRESHOLD:    0.05,  // frame score treated as "positive"
+  MAJORITY_AFTER_FIRST_THRESHOLD: 0.40, // after first positive, majority must stay positive
+  MIN_POSITIVE_FRAMES_AFTER_FIRST: 2,   // avoid single-frame lucky passes
 } as const;
 
 // MobileNet ImageNet labels closest to "key" — kept broad because keys produce
@@ -100,7 +100,7 @@ function computeFrameScore(
   let cocoKeyHit = false;
   for (const pred of coco) {
     if (!COCO_KEY_CLASSES.includes(pred.class)) continue;
-    if (pred.score < 0.15) continue;
+    if (pred.score < 0.08) continue;
     const [x, y, w, h] = pred.bbox;
     if (w * h < VISION_CONFIG.MIN_BBOX_AREA) continue;
     cocoKeyHit = true;
