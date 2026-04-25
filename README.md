@@ -6,7 +6,7 @@ Arcadia is a demo-first web experience built for a hackathon setting. It is inte
 
 ## Submission Snapshot
 
-- **Repo:** [joeljin20/Arcadia](https://github.com/joeljin20/Arcadia)
+- **Repo:** https://github.com/jacksangster03/ArcadiaTechRoulette
 - **Run locally (single command):**
   ```bash
   npm install && npm run dev
