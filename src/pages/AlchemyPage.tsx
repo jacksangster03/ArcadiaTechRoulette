@@ -771,6 +771,15 @@ export function AlchemyPage({ onTriggerArcadia, searchVisible }: { onTriggerArca
         }}
         onBreach={handleBreachComplete}
       />
+
+      <div className="flex justify-center pt-4 pb-2">
+        <button
+          onClick={onTriggerArcadia}
+          className="text-slate-300/40 hover:text-emerald-500 font-mono uppercase tracking-[0.18em] text-[8px] transition-colors border border-transparent hover:border-emerald-500/20 px-3 py-0.5 rounded-full"
+        >
+          [DEV] Open Key Scanner
+        </button>
+      </div>
     </motion.div>
   );
 }
