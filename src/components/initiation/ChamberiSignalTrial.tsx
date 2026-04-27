@@ -272,13 +272,13 @@ export function ChamberiSignalTrial({ onClose, onSuccess }: { onClose: () => voi
             >
               <p className="text-[9px] font-mono uppercase tracking-[0.3em] text-emerald-600">Transform Rule</p>
               <p className="text-base font-mono text-zinc-200 font-semibold">{puzzle.ruleText}</p>
-              <p className="text-[11px] font-serif italic text-zinc-500 leading-relaxed border-t border-zinc-800 pt-3">
+              <p className="text-[11px] font-serif italic text-zinc-200 leading-relaxed border-t border-zinc-800 pt-3">
                 "{puzzle.cipherHint}"
               </p>
               <div className="flex gap-2 flex-wrap pt-1">
-                <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-600">Source:</span>
+                <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-300">Source:</span>
                 {puzzle.source.map((n, i) => (
-                  <span key={i} className="text-[10px] font-mono text-zinc-400 bg-zinc-900 border border-zinc-800 px-1.5 py-0.5 rounded">{n}</span>
+                  <span key={i} className="text-[10px] font-mono text-zinc-200 bg-zinc-900 border border-zinc-800 px-1.5 py-0.5 rounded">{n}</span>
                 ))}
               </div>
             </motion.div>

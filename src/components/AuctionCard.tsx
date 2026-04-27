@@ -116,7 +116,7 @@ export function AuctionCard({ lot, identity, onBidUpdate }: { lot: AuctionLot; i
                   value={keyInput}
                   onChange={(e) => setKeyInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleUnlock()}
-                  className="w-full bg-transparent border-none text-sm font-mono text-emerald-400 placeholder-zinc-700 outline-none px-4 py-3 uppercase tracking-widest shadow-inner focus:text-emerald-300"
+                  className="w-full bg-transparent border-none text-sm font-mono text-emerald-400 placeholder-zinc-400 outline-none px-4 py-3 uppercase tracking-widest shadow-inner focus:text-emerald-300"
                 />
                 <button
                   onClick={handleUnlock}
@@ -185,7 +185,7 @@ export function AuctionCard({ lot, identity, onBidUpdate }: { lot: AuctionLot; i
                         placeholder="ENTER AMOUNT..."
                         value={bidAmount}
                         onChange={(e) => setBidAmount(e.target.value)}
-                        className="w-full bg-transparent border-none text-sm font-mono text-emerald-400 placeholder-zinc-800 outline-none px-4 py-3 uppercase tracking-widest"
+                        className="w-full bg-transparent border-none text-sm font-mono text-emerald-400 placeholder-zinc-400 outline-none px-4 py-3 uppercase tracking-widest"
                       />
                    </div>
                 </div>

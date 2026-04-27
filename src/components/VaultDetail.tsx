@@ -123,7 +123,7 @@ export function VaultDetail({
     >
       {/* back + meta */}
       <div className="flex items-center justify-between gap-4">
-        <button onClick={onBack} className="flex items-center gap-2 text-zinc-500 hover:text-zinc-200 transition-colors text-[10px] uppercase tracking-widest font-mono">
+        <button onClick={onBack} className="flex items-center gap-2 text-zinc-300 hover:text-white transition-colors text-[10px] uppercase tracking-widest font-mono">
           <ArrowLeft className="w-4 h-4" /> Back to Vault
         </button>
         <span className={`text-[9px] font-mono uppercase tracking-[0.2em] px-2 py-0.5 border ${style.badge}`}>
@@ -147,7 +147,7 @@ export function VaultDetail({
 
             <div className="flex-1 space-y-5">
               <div>
-                <p className="text-[9px] uppercase tracking-[0.3em] text-zinc-600 font-mono mb-2">
+                <p className="text-[9px] uppercase tracking-[0.3em] text-zinc-300 font-mono mb-2">
                   LOT ID: {item.id.split('_').pop()}
                 </p>
                 {unlocked ? (
@@ -162,7 +162,7 @@ export function VaultDetail({
                       )}
                     </h2>
                     {item.alternateName && (
-                      <p className="mt-2 text-[11px] font-mono text-zinc-500 uppercase tracking-widest italic">
+                      <p className="mt-2 text-[11px] font-mono text-zinc-300 uppercase tracking-widest italic">
                         aka "{item.alternateName}"
                       </p>
                     )}
@@ -174,23 +174,23 @@ export function VaultDetail({
                 )}
               </div>
 
-              <p className="text-sm text-zinc-500 font-mono italic leading-relaxed border-l border-zinc-800 pl-4">
+              <p className="text-sm text-zinc-200 font-mono italic leading-relaxed border-l border-zinc-800 pl-4">
                 {unlocked ? `"${item.originalDescription}"` : item.cipherDescription}
               </p>
 
               {/* seller */}
-              <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-600">
-                Seller: <span className="text-zinc-300 font-bold">{item.sellerAlias}</span>
+              <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-300">
+                Seller: <span className="text-white font-bold">{item.sellerAlias}</span>
               </p>
 
               {/* stats row */}
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 <div className="bg-zinc-950 border border-zinc-900 p-3">
-                  <p className="text-[8px] uppercase tracking-widest text-zinc-600 mb-1 font-mono">Floor</p>
-                  <p className="text-base font-mono text-zinc-400">ℂ {item.startingBid.toLocaleString()}</p>
+                  <p className="text-[8px] uppercase tracking-widest text-zinc-300 mb-1 font-mono">Floor</p>
+                  <p className="text-base font-mono text-zinc-200">ℂ {item.startingBid.toLocaleString()}</p>
                 </div>
                 <div className="bg-zinc-950 border border-zinc-900 p-3 relative overflow-hidden">
-                  <p className="text-[8px] uppercase tracking-widest text-zinc-500 mb-1 font-mono">Market Price</p>
+                  <p className="text-[8px] uppercase tracking-widest text-zinc-300 mb-1 font-mono">Market Price</p>
                   <p className="text-base font-mono font-bold text-zinc-100">ℂ {item.currentPrice.toLocaleString()}</p>
                   <div className={`absolute top-1.5 right-1.5 flex items-center gap-0.5 text-[9px] font-mono ${isUp ? 'text-emerald-400' : 'text-red-400'}`}>
                     {isUp ? <TrendingUp className="w-2.5 h-2.5" /> : <TrendingDown className="w-2.5 h-2.5" />}
@@ -198,7 +198,7 @@ export function VaultDetail({
                   </div>
                 </div>
                 <div className={`border p-3 col-span-2 md:col-span-1 ${isClosed ? 'bg-red-950/10 border-red-900/30' : 'bg-zinc-950 border-zinc-900'}`}>
-                  <p className="text-[8px] uppercase tracking-widest text-zinc-600 mb-1 font-mono flex items-center gap-1">
+                  <p className="text-[8px] uppercase tracking-widest text-zinc-300 mb-1 font-mono flex items-center gap-1">
                     <Timer className="w-2.5 h-2.5" /> Time Left
                   </p>
                   <p className={`text-sm font-mono font-bold ${isClosed ? 'text-red-400' : item.endsAt - Date.now() < 5 * 60 * 1000 ? 'text-red-400 animate-pulse' : 'text-zinc-300'}`}>
@@ -216,7 +216,7 @@ export function VaultDetail({
                     </motion.p>
                   )}
                   <div className="flex bg-zinc-950 border border-zinc-800 focus-within:border-emerald-900/50 transition-all">
-                    <div className="pl-3 flex items-center text-zinc-600">
+                    <div className="pl-3 flex items-center text-zinc-300">
                       <KeyRound className="w-3.5 h-3.5" />
                     </div>
                     <input
@@ -225,9 +225,9 @@ export function VaultDetail({
                       value={keyInput}
                       onChange={e => setKeyInput(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && handleUnlock()}
-                      className="flex-1 bg-transparent border-none text-sm font-mono text-emerald-400 placeholder-zinc-700 outline-none px-3 py-2.5 uppercase tracking-widest"
+                      className="flex-1 bg-transparent border-none text-sm font-mono text-emerald-400 placeholder-zinc-400 outline-none px-3 py-2.5 uppercase tracking-widest"
                     />
-                    <button onClick={handleUnlock} className="px-5 bg-zinc-900 text-zinc-400 text-[10px] font-mono font-bold uppercase tracking-widest hover:bg-emerald-950/50 hover:text-emerald-400 transition-colors border-l border-zinc-800">
+                    <button onClick={handleUnlock} className="px-5 bg-zinc-900 text-white text-[10px] font-mono font-bold uppercase tracking-widest hover:bg-emerald-950/50 hover:text-emerald-400 transition-colors border-l border-zinc-800">
                       Decrypt
                     </button>
                   </div>
@@ -242,20 +242,20 @@ export function VaultDetail({
               <div className="flex flex-col md:flex-row gap-4 items-end justify-between">
                 <div className="w-full md:max-w-xs space-y-2">
                   <div className="flex justify-between items-center">
-                    <label className="text-[9px] uppercase tracking-widest font-mono text-zinc-500">Your Offer</label>
+                    <label className="text-[9px] uppercase tracking-widest font-mono text-zinc-300">Your Offer</label>
                     {bidError && <span className="text-[9px] text-red-500 font-mono animate-pulse">{bidError}</span>}
                   </div>
                   <div className="flex bg-zinc-950 border border-zinc-800 focus-within:border-emerald-900/50 transition-all">
-                    <span className="pl-3 flex items-center text-zinc-500 font-mono text-sm">ℂ</span>
+                    <span className="pl-3 flex items-center text-white font-mono text-sm">ℂ</span>
                     <input
                       type="number"
                       placeholder="ENTER AMOUNT..."
                       value={bidAmount}
                       onChange={e => setBidAmount(e.target.value)}
-                      className="flex-1 bg-transparent border-none text-sm font-mono text-emerald-400 placeholder-zinc-800 outline-none px-3 py-2.5 tracking-widest"
+                      className="flex-1 bg-transparent border-none text-sm font-mono text-emerald-400 placeholder-zinc-400 outline-none px-3 py-2.5 tracking-widest"
                     />
                   </div>
-                  <p className="text-[9px] font-mono text-zinc-600">
+                  <p className="text-[9px] font-mono text-zinc-300">
                     Balance: ℂ {credits.toLocaleString()} · Highest: ℂ {item.highestBid.toLocaleString()}
                   </p>
                 </div>
@@ -263,7 +263,7 @@ export function VaultDetail({
                 <div className="flex gap-3">
                   <button
                     onClick={() => setShowHistory(!showHistory)}
-                    className={`px-5 py-2.5 border text-[10px] font-mono uppercase tracking-widest transition-all flex items-center gap-2 ${showHistory ? 'bg-zinc-800 text-zinc-100 border-zinc-700' : 'bg-black text-zinc-500 border-zinc-800 hover:text-zinc-300 hover:border-zinc-700'}`}
+                    className={`px-5 py-2.5 border text-[10px] font-mono uppercase tracking-widest transition-all flex items-center gap-2 ${showHistory ? 'bg-zinc-800 text-white border-zinc-700' : 'bg-black text-zinc-300 border-zinc-800 hover:text-white hover:border-zinc-700'}`}
                   >
                     <History className="w-3.5 h-3.5" />
                     {showHistory ? 'Hide' : 'Bids'}
@@ -281,25 +281,25 @@ export function VaultDetail({
               <AnimatePresence>
                 {showHistory && (
                   <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden border-t border-zinc-900/50 pt-5">
-                    <p className="text-[9px] uppercase tracking-[0.3em] text-zinc-600 font-mono mb-3 flex items-center gap-2">
+                    <p className="text-[9px] uppercase tracking-[0.3em] text-zinc-300 font-mono mb-3 flex items-center gap-2">
                       <History className="w-3 h-3" /> Bid History
                     </p>
                     <div className="max-h-44 overflow-y-auto space-y-1">
                       {item.bids.length > 0 ? item.bids.map((bid, idx) => (
                         <div key={bid.id} className={`flex justify-between items-center p-3 border ${idx === 0 ? 'bg-emerald-950/10 border-emerald-900/30' : 'bg-zinc-950/50 border-zinc-900/50'}`}>
                           <div className="flex items-center gap-2">
-                            <User className={`w-3.5 h-3.5 ${idx === 0 ? 'text-emerald-500' : 'text-zinc-600'}`} />
-                            <span className={`text-[11px] font-mono uppercase tracking-wider ${idx === 0 ? 'text-emerald-400' : 'text-zinc-400'}`}>
-                              {bid.bidderName} {bid.bidderId === identity?.id && <span className="text-zinc-600">(you)</span>}
+                            <User className={`w-3.5 h-3.5 ${idx === 0 ? 'text-emerald-500' : 'text-zinc-300'}`} />
+                            <span className={`text-[11px] font-mono uppercase tracking-wider ${idx === 0 ? 'text-emerald-400' : 'text-zinc-200'}`}>
+                              {bid.bidderName} {bid.bidderId === identity?.id && <span className="text-zinc-400">(you)</span>}
                             </span>
                           </div>
                           <div className="flex items-center gap-4">
-                            <span className="text-[9px] text-zinc-600 font-mono">{new Date(bid.timestamp).toLocaleTimeString()}</span>
-                            <span className={`text-sm font-mono font-bold ${idx === 0 ? 'text-emerald-400' : 'text-zinc-300'}`}>ℂ {bid.amount.toLocaleString()}</span>
+                            <span className="text-[9px] text-zinc-400 font-mono">{new Date(bid.timestamp).toLocaleTimeString()}</span>
+                            <span className={`text-sm font-mono font-bold ${idx === 0 ? 'text-emerald-400' : 'text-white'}`}>ℂ {bid.amount.toLocaleString()}</span>
                           </div>
                         </div>
                       )) : (
-                        <p className="text-center py-6 text-zinc-700 text-[10px] uppercase tracking-widest font-mono border border-dashed border-zinc-900">No active bids detected</p>
+                        <p className="text-center py-6 text-zinc-300 text-[10px] uppercase tracking-widest font-mono border border-dashed border-zinc-900">No active bids detected</p>
                       )}
                     </div>
                   </motion.div>
@@ -321,21 +321,21 @@ export function VaultDetail({
       {/* per-item chat */}
       <div className="bg-black border border-zinc-900 overflow-hidden">
         <div className="px-5 py-3 border-b border-zinc-900 bg-zinc-950/50">
-          <p className="text-[9px] uppercase tracking-[0.25em] font-mono text-zinc-500">
-            Back-Channel — <span className="text-zinc-400">{item.cipherTitle.slice(0, 18)}…</span>
+          <p className="text-[9px] uppercase tracking-[0.25em] font-mono text-white">
+            Back-Channel — <span className="text-zinc-200">{item.cipherTitle.slice(0, 18)}…</span>
           </p>
         </div>
 
         <div className="max-h-48 overflow-y-auto flex flex-col-reverse p-4 space-y-2 space-y-reverse gap-2">
           {chat.length === 0 ? (
-            <p className="text-center py-4 text-zinc-700 text-[9px] uppercase tracking-widest font-mono">Silence on the back-channel</p>
+            <p className="text-center py-4 text-zinc-300 text-[9px] uppercase tracking-widest font-mono">Silence on the back-channel</p>
           ) : (
             chat.map(m => (
               <div key={m.id} className="flex gap-3 items-start">
-                <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 shrink-0 mt-0.5">{m.senderName}</span>
+                <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-300 shrink-0 mt-0.5">{m.senderName}</span>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-mono text-zinc-300 leading-relaxed break-words">{m.content}</p>
-                  <p className="text-[8px] font-mono text-zinc-700 mt-0.5">{new Date(m.timestamp).toLocaleTimeString()}</p>
+                  <p className="text-[8px] font-mono text-zinc-500 mt-0.5">{new Date(m.timestamp).toLocaleTimeString()}</p>
                 </div>
               </div>
             ))
@@ -349,9 +349,9 @@ export function VaultDetail({
             value={chatMsg}
             onChange={e => setChatMsg(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleChat()}
-            className="flex-1 bg-black border border-zinc-800 px-3 py-2 text-xs font-mono text-emerald-400 placeholder-zinc-700 outline-none focus:border-emerald-900/50 transition-colors"
+            className="flex-1 bg-black border border-zinc-800 px-3 py-2 text-xs font-mono text-emerald-400 placeholder-zinc-400 outline-none focus:border-emerald-900/50 transition-colors"
           />
-          <button onClick={handleChat} disabled={!chatMsg.trim() || !identity} className="px-4 bg-zinc-900 text-zinc-400 hover:text-emerald-400 hover:bg-zinc-800 transition-colors disabled:opacity-20 border border-zinc-800">
+          <button onClick={handleChat} disabled={!chatMsg.trim() || !identity} className="px-4 bg-zinc-900 text-white hover:text-emerald-400 hover:bg-zinc-800 transition-colors disabled:opacity-20 border border-zinc-800">
             <Send className="w-3.5 h-3.5" />
           </button>
         </div>

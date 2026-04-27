@@ -26,7 +26,7 @@ export function VaultNDAModal({ onAccept, onDecline }: { onAccept: () => void; o
           <div className="h-px bg-gradient-to-r from-transparent via-zinc-800 to-transparent" />
 
           {/* body */}
-          <div className="space-y-3 text-[12px] text-zinc-400 leading-relaxed font-mono">
+          <div className="space-y-3 text-[12px] text-white leading-relaxed font-mono">
             <p>
               All lot contents, seller identities, and transaction records are classified at{' '}
               <span className="text-zinc-200 font-bold">Obsidian Level</span>. By entering you covenant to:
@@ -37,7 +37,7 @@ export function VaultNDAModal({ onAccept, onDecline }: { onAccept: () => void; o
               <li>— Surrender due-process claims on all Vault transactions</li>
               <li>— Accept bids as irrevocable commitments to the Inner Council</li>
             </ul>
-            <p className="text-[11px] text-zinc-500">
+            <p className="text-[11px] text-zinc-200">
               This covenant is enforced across all jurisdictions, named and unnamed. Breach is logged and acted upon.
             </p>
           </div>
@@ -53,7 +53,7 @@ export function VaultNDAModal({ onAccept, onDecline }: { onAccept: () => void; o
           <div className="flex gap-3">
             <button
               onClick={onDecline}
-              className="flex-1 py-2.5 border border-zinc-800 text-zinc-500 text-[9px] uppercase tracking-[0.25em] font-mono hover:border-zinc-700 hover:text-zinc-300 transition-colors"
+              className="flex-1 py-2.5 border border-zinc-800 text-zinc-200 text-[9px] uppercase tracking-[0.25em] font-mono hover:border-zinc-700 hover:text-white transition-colors"
             >
               Decline / Retreat
             </button>

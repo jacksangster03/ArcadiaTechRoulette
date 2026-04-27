@@ -401,7 +401,7 @@ export function ArcadiaDashboard({ onAdminToggle, onLogout }: { onAdminToggle: (
                       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div>
                           <h2 className="text-xl font-mono text-zinc-200 uppercase tracking-widest">The Vault</h2>
-                          <p className="text-[10px] font-mono text-zinc-600 uppercase tracking-widest mt-1">
+                          <p className="text-[10px] font-mono text-zinc-300 uppercase tracking-widest mt-1">
                             {vaultItems.filter(i => i.endsAt > Date.now()).length} active lots
                           </p>
                         </div>
@@ -416,7 +416,7 @@ export function ArcadiaDashboard({ onAdminToggle, onLogout }: { onAdminToggle: (
                       <div className="flex flex-wrap gap-2">
                         <button
                           onClick={() => setVaultCategory('ALL')}
-                          className={`text-[9px] font-mono uppercase tracking-[0.2em] px-3 py-1.5 border transition-all ${vaultCategory === 'ALL' ? 'border-zinc-500 text-zinc-200 bg-zinc-900' : 'border-zinc-800 text-zinc-600 hover:text-zinc-400 hover:border-zinc-700'}`}
+                          className={`text-[9px] font-mono uppercase tracking-[0.2em] px-3 py-1.5 border transition-all ${vaultCategory === 'ALL' ? 'border-zinc-500 text-white bg-zinc-900' : 'border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-700'}`}
                         >
                           All
                         </button>
@@ -426,7 +426,7 @@ export function ArcadiaDashboard({ onAdminToggle, onLogout }: { onAdminToggle: (
                             <button
                               key={cat}
                               onClick={() => setVaultCategory(cat)}
-                              className={`text-[9px] font-mono uppercase tracking-[0.2em] px-3 py-1.5 border transition-all ${vaultCategory === cat ? s.badge : 'border-zinc-800 text-zinc-600 hover:text-zinc-400 hover:border-zinc-700'}`}
+                              className={`text-[9px] font-mono uppercase tracking-[0.2em] px-3 py-1.5 border transition-all ${vaultCategory === cat ? s.badge : 'border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-700'}`}
                             >
                               {cat}
                             </button>
@@ -441,7 +441,7 @@ export function ArcadiaDashboard({ onAdminToggle, onLogout }: { onAdminToggle: (
                           i.endsAt > now && (vaultCategory === 'ALL' || i.category === vaultCategory)
                         );
                         return filtered.length === 0 ? (
-                          <div className="p-16 text-center text-zinc-600 font-mono text-[10px] tracking-[0.2em] uppercase border border-zinc-900 bg-zinc-950/30">
+                          <div className="p-16 text-center text-zinc-300 font-mono text-[10px] tracking-[0.2em] uppercase border border-zinc-900 bg-zinc-950/30">
                             No active lots in this category.
                           </div>
                         ) : (

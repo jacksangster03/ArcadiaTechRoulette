@@ -58,19 +58,19 @@ export function VaultItemCard({ item, onSelect }: { item: VaultItem; onSelect: (
 
       <div className="p-4 space-y-3">
         {/* cipher title */}
-        <h3 className="text-sm font-mono text-zinc-300 leading-snug line-clamp-2 group-hover:text-zinc-100 transition-colors terminal-text">
+        <h3 className="text-sm font-mono text-white leading-snug line-clamp-2 group-hover:text-white transition-colors terminal-text">
           {item.cipherTitle}
         </h3>
 
         {/* seller */}
-        <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-zinc-600">
-          Seller: <span className="text-zinc-400">{item.sellerAlias}</span>
+        <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-zinc-300">
+          Seller: <span className="text-zinc-200">{item.sellerAlias}</span>
         </p>
 
         {/* price row */}
         <div className="flex items-end justify-between gap-2 pt-1 border-t border-zinc-900">
           <div>
-            <p className="text-[8px] uppercase tracking-widest text-zinc-600 mb-0.5 font-mono">Current Price</p>
+            <p className="text-[8px] uppercase tracking-widest text-zinc-300 mb-0.5 font-mono">Current Price</p>
             <p className="text-base font-mono font-bold text-zinc-100">
               ℂ {item.currentPrice.toLocaleString()}
             </p>
@@ -82,13 +82,13 @@ export function VaultItemCard({ item, onSelect }: { item: VaultItem; onSelect: (
         </div>
 
         {/* timer */}
-        <div className={`flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest ${isExpiringSoon ? 'text-red-400 animate-pulse' : 'text-zinc-500'}`}>
+        <div className={`flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest ${isExpiringSoon ? 'text-red-400 animate-pulse' : 'text-zinc-300'}`}>
           <Timer className="w-3 h-3 shrink-0" />
           <span>{countdown}</span>
         </div>
 
         {/* view hint */}
-        <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 text-[9px] text-zinc-500 uppercase tracking-widest font-mono">
+        <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 text-[9px] text-zinc-300 uppercase tracking-widest font-mono">
           <Eye className="w-3 h-3" /> View
         </div>
       </div>

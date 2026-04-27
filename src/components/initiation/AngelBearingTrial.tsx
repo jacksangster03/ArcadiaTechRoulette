@@ -164,7 +164,7 @@ export function AngelBearingTrial({ onClose, onSuccess }: { onClose: () => void;
             transition={{ duration: 0.35 }}
             className="max-w-sm text-center"
           >
-            <p className="text-base md:text-lg font-serif italic text-zinc-300 leading-relaxed">
+            <p className="text-base md:text-lg font-serif italic text-white leading-relaxed">
               {clue.primary}
             </p>
           </motion.div>
@@ -321,7 +321,7 @@ export function AngelBearingTrial({ onClose, onSuccess }: { onClose: () => void;
           <div className={`text-5xl font-mono font-bold tracking-wider transition-colors duration-300 ${success ? 'text-emerald-400' : 'text-zinc-200'}`}>
             {String(bearing).padStart(3, '0')}°
           </div>
-          <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-zinc-600 mt-1">
+          <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-zinc-300 mt-1">
             {bearingLabel(bearing)}
             {!success && stage !== 'SEAL' && diff <= 18 && (
               <span className="text-emerald-600 ml-2">· {Math.round(diff)}° off</span>

@@ -105,7 +105,7 @@ export function TrialShell({
             </p>
           )}
           <h2 className="text-3xl md:text-4xl font-serif italic text-white">{title}</h2>
-          <p className="text-sm text-zinc-500 max-w-xs mx-auto leading-relaxed">{subtitle}</p>
+          <p className="text-sm text-white max-w-xs mx-auto leading-relaxed">{subtitle}</p>
         </div>
 
         {children}

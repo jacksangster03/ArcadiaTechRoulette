@@ -216,7 +216,7 @@ export function AdminPanel({ onBack }: { onBack: () => void }) {
                      {isRecording ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
                    </button>
                    <textarea
-                     className="w-full bg-transparent border-none text-xl md:text-2xl font-serif text-slate-300 placeholder-slate-600 focus:ring-0 resize-none min-h-[150px] outline-none"
+                     className="w-full bg-transparent border-none text-xl md:text-2xl font-serif text-slate-300 placeholder-slate-300 focus:ring-0 resize-none min-h-[150px] outline-none"
                      placeholder={isRecording ? "Listening to your transmission..." : "Type intel or use secure voice dictation to embed hints..."}
                      value={intelText}
                      onChange={(e) => setIntelText(e.target.value)}
